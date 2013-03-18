@@ -1,11 +1,667 @@
+<!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8">
-<title>Replace me!</title>
-<link href="http://www.w3.org/StyleSheets/TR/w3c-unofficial" rel="stylesheet">
-</head>
+  <head>
+    <title>Raw Socket API</title>
+    <meta http-equiv='Content-Type' content='text/html;charset=utf-8'/>
+    <!-- 
+      === NOTA BENE ===
+      For the three scripts below, if your spec resides on dev.w3 you can check them
+      out in the same tree and use relative links so that they'll work offline,
+     -->
+    <script src='http://www.w3.org/Tools/respec/respec-w3c-common' class='remove' async></script> 
+    <script class='remove'>
+      var respecConfig = {
+          // specification status (e.g. WD, LCWD, NOTE, etc.). If in doubt use ED.
+          specStatus:           "ED",
+          
+          // the specification's short name, as in http://www.w3.org/TR/short-name/
+          shortName:            "socket-api",
 
-<body>
-<h1>Awesome Spec coming soon!</h1>
-</body>
+          // if your specification has a subtitle that goes below the main
+          // formal title, define it here
+          // subtitle   :  "an excellent document",
+
+          // if you wish the publication date to be other than today, set this
+          // publishDate:  "2009-08-06",
+
+          // if the specification's copyright date is a range of years, specify
+          // the start date here:
+          // copyrightStart: "2005"
+
+          // if there is a previously published draft, uncomment this and set its YYYY-MM-DD date
+          // and its maturity status
+          // previousPublishDate:  "1977-03-15",
+          // previousMaturity:  "WD",
+
+          // if there a publicly available Editor's Draft, this is the link
+          edDraftURI:           "http://sysapps.github.com/sysapps//proposals/raw-socket/socket.HTML",
+
+          // if this is a LCWD, uncomment and set the end of its review period
+          // lcEnd: "2009-08-05",
+
+          // if you want to have extra CSS, append them to this list
+          // it is recommended that the respec.css stylesheet be kept
+          extraCSS:             ["http://dev.w3.org/2009/dap/ReSpec.js/css/respec.css"],
+
+          // editors, add as many as you like
+          // only "name" is required
+          editors:  [             
+              { name: "Claes Nilsson", url: "claes1.nilsson@sonymobile.com",
+                company: "Sony Mobile", companyURL: "http://www.sonymobile.com" },
+          ],
+
+          // authors, add as many as you like. 
+          // This is optional, uncomment if you have authors as well as editors.
+          // only "name" is required. Same format as editors.
+
+          //authors:  [
+          //    { name: "Your Name", url: "http://example.org/",
+          //      company: "Your Company", companyURL: "http://example.com/" },
+          //],
+          
+          // name of the WG
+          wg:           "System Applications Working Group",
+          
+          // URI of the public WG page
+          wgURI:        "http://www.w3.org/2012/sysapps/",
+          
+          // name (without the @w3c.org) of the public mailing to which comments are due
+          wgPublicList: "public-sysapps",
+          
+          // URI of the patent status for this WG, for Rec-track documents
+          // !!!! IMPORTANT !!!!
+          // This is important for Rec-track documents, do not copy a patent URI from a random
+          // document unless you know what you're doing. If in doubt ask your friendly neighbourhood
+          // Team Contact.
+          wgPatentURI:  "http://www.w3.org/2004/01/pp-impl/58119/status",
+      };
+    </script>
+  </head>
+  <body>
+    <section id='abstract'>
+      This API provides interfaces to raw TCP and UDP sockets.
+    </section>
+    
+    <section class="informative">
+      <h2>Introduction</h2>
+      <p>
+        Use this API to send and receive data over the network using TCP or UDP. 
+      </p>
+      
+      An example of use is provided below:
+      
+      <pre class="example highlight">
+
+        // Code example TBD 
+                    
+      </pre>
+    </section>
+    
+    <section id="conformance">
+      <p>This specification defines conformance criteria that apply to a single product: the <dfn>user agent</dfn> that
+         implements the interfaces that it contains.
+      </p>
+      
+      <p>Implementations that use ECMAScript to implement the APIs defined in this specification MUST implement them in
+         a manner consistent with the ECMAScript Bindings defined in the Web IDL specification [[!WEBIDL]], as this
+          specification uses that specification and terminology.
+      </p>          
+      
+    </section>
+    
+    <section>
+      <h2>Terminology</h2>
+      <p>The <code><a href="http://dev.w3.org/html5/spec/webappapis.html#eventhandler"> EventHandler</a></code>
+         interface represents a callback used for event handlers as defined in [[!HTML5]].
+      </p>
+      
+      <p>The concepts <dfn><a href="http://dev.w3.org/html5/spec/webappapis.html#queue-a-task"> queue a task</a></dfn>
+         and <dfn><a href="http://dev.w3.org/html5/spec/webappapis.html#fire-a-simple-event"> fire a simple event</a></dfn>
+         are defined in [[!HTML5]].
+      </p>
+            
+      <p>The terms <dfn><a href="http://dev.w3.org/html5/spec/webappapis.html#event-handlers"> event handler</a></dfn>
+         and <dfn><a href="http://dev.w3.org/html5/spec/webappapis.html#event-handler-event-type"> event handler event
+         types</a></dfn> are defined in [[!HTML5]].
+      </p>
+    </section>
+
+    <section>
+      <h2>Security and privacy considerations</h2>
+      <p>
+        This API must be only exposed to trusted content.
+      </p>
+      
+    </section>
+
+    <section>
+      <h2>Interface <a>RawSocket</a></h2>
+      <p>The <a>RawSocket</a> interface defines the attributes and methods that are common for TCP and UDP sockets</p> 
+      
+      <dl title="[NoInterfaceObject] 
+                 interface RawSocket"
+          class="idl">  
+          
+        <dt>readonly attribute CreateOptions options</dt>
+        <dd>The socket create options.</dd>   
+        
+        <dt>readonly attribute boolean connected</dt>
+        <dd>True when the underlying socket is connected, i.e. connect() has been called. For udp sockets, this just represents whether a default 
+        remote address has been specified for reading and writing packets.</dd>   
+        
+        <dt>readonly attribute DOMString? peerAddress</dt>
+        <dd>If the underlying socket is connected, contains the IPv4/6 address of the peer, else this attribute is null.</dd>   
+        
+        <dt>readonly attribute unsigned short? peerPort</dt>
+        <dd>If the underlying socket is connected, contains the port of the peer, else this attribute is null. </dd>     
+        
+        <dt>readonly attribute DOMString? localAddress</dt>
+        <dd>If the underlying socket is bound or connected, contains its local IPv4/6 address, else this attribute is null.</dd>   
+        
+        <dt>readonly attribute unsigned short? localPort</dt>
+        <dd>If the underlying socket is bound or connected, contains its local port, else this attribute is null. </dd>                                 
+        
+        <dt> void connect()</dt>
+        <dd>        
+          <p>For a TCP socket connects the socket to the remote machine. For a UDP socket, this sets the default peer address that is used for subsequent 
+             read() and write() calls.</p>        
+ 
+          <p>
+            Throws DOMException <code>InvalidAccessError</code> if any input parameter is not compatible with the expected type for that parameter.
+          </p>
+        
+          <dl class='parameters'>
+          
+             <dt>ConnectCallback callback</dt>
+             <dd>
+               Called when the connection attempt is complete.
+             </dd>            
+             <dt>DOMString peerAddress</dt>
+             <dd>
+               The hostname or IP address of the remote machine.
+             </dd>
+             <dt>unsigned short peerPort</dt>
+             <dd>
+               The port of the remote machine.
+             </dd>      
+                     
+          </dl>
+        </dd>   
+                 
+        <dt> void destroy()</dt>
+        <dd>        
+          <p> Disconnects and destroys this socket. A socket should be destroyed after use. A destroyed socket can not be used again by 
+             issuing any method call. A new socket instance has to be created. </p>  
+          <p class="issue">
+            This is different from the Chrome socket API, which has the two methods, disconnect() and destroy(). However, do we need disconnect()? 
+            Are there any use cases for issuing a disconnect() without destroy()? A new socket instance call always be created. 
+          </p>         
+        </dd>     
+        
+        <dt> void read()</dt>
+        <dd>        
+          <p>Reads data from the given "connected" UDP or TCP socket. For client sockets connect() must previously been called and for server sockets
+             accept() must previously been called.</p>        
+ 
+          <p>
+            Throws DOMException <code>InvalidAccessError</code> if any input parameter is not compatible with the expected type for that parameter.<br /> 
+            Throws DOMException <code>InvalidStateError</code> if the socket is not "connected".
+          </p>
+        
+          <dl class='parameters'>
+          
+             <dt>ReadCallback callback</dt>
+             <dd>
+               Called when the read operation is complete, i.e. at max number of bytes have been received or end of file detected, or at an error condition.
+             </dd>             
+             <dt>optional long maxNoOfBytes</dt>
+             <dd>
+               The max number of bytes to receive before callback.
+             </dd>
+                     
+          </dl>
+        </dd>          
+        
+        <dt> void write()</dt>
+        <dd>        
+          <p>Writes data on the given connected UDP or TCP socket. For client sockets connect() must previously been called and for server sockets
+             accept() must previously been called.</p>     
+ 
+          <p>
+            Throws DOMException <code>InvalidAccessError</code> if any input parameter is not compatible with the expected type for that parameter.<br /> 
+            Throws DOMException <code>InvalidStateError</code> if the socket is not "connected".
+          </p>
+        
+          <dl class='parameters'>
+
+             <dt>WriteCallback callback</dt>
+             <dd>
+               Called when the send operation completes without blocking or an error occurs.
+             </dd> 
+             <dt>ArrayBuffer data</dt>
+             <dd>
+               The data to write.
+             </dd>      
+                     
+          </dl>
+        </dd>                           
+                            
+      </dl>  
+            
+    </section>     
+    
+    <section>
+      <h2>Interface <a>UDPSocket</a></h2>
+      <p>The <a>UDPSocket</a> interface defines the attributes and methods for a UDP socket</p> 
+      
+      <pre class="example highlight">
+        // Create a UDP socket
+        mySocket = new UDPSocket ();  
+        // Further code TBD..       
+      </pre>
+      
+      <dl title="[Constructor (optional CreateOptions options)] 
+                 interface UDPSocket : RawSocket"
+          class="idl">  
+          
+        <dt> void bind()</dt>
+        <dd>        
+          <p>Binds the local address for a UDP socket. </p>      
+    
+          <p>
+            Throws DOMException <code>InvalidAccessError</code> if any input parameter is not compatible with the expected type for that parameter.
+          </p>
+        
+          <dl class='parameters'>
+          
+             <dt>BindCallback callback</dt>
+             <dd>
+               Called when the bind attempt is complete.
+             </dd>             
+             <dt>optional DOMString localAddress</dt>
+             <dd>
+               The address of the local machine. If this parameter is omitted then any available local address is used.
+             </dd>
+             <dt>optional unsigned short localPort</dt>
+             <dd>
+               The port of the local machine. If this parameter is omitted then any free port is used.
+             </dd>    
+                     
+          </dl>
+        </dd>     
+
+        <dt> void recvFrom()</dt>
+        <dd>        
+          <p>Receives data from the given UDP socket.</p>        
+ 
+          <p>
+            Throws DOMException <code>InvalidAccessError</code> if any input parameter is not compatible with the expected type for that parameter.
+          </p>
+          <p class="issue">
+            The Chrome Socket API also has the parameter "bufferSize", which is the receive buffer size. However, the callback is issued when a 
+            datagram has been received so it does not seems necessary to define a specific buffer size.
+          </p> 
+        
+          <dl class='parameters'>
+          
+             <dt>RecvFromCallback callback</dt>
+             <dd>
+               Called when the receive operation is complete, i.e. a datagram has been received, or at an error condition.
+             </dd>             
+                     
+          </dl>
+        </dd>       
+        
+        <dt> void sendTo()</dt>
+        <dd>        
+          <p>Sends data on the given UDP socket to the given address and port.</p>        
+ 
+          <p>
+            Throws DOMException <code>InvalidAccessError</code> if any input parameter is not compatible with the expected type for that parameter.
+          </p>
+        
+          <dl class='parameters'>
+
+             <dt>SendToCallback callback</dt>
+             <dd>
+               Called when the send operation completes without blocking or an error occurs.
+             </dd>   
+             <dt>ArrayBuffer data</dt>
+             <dd>
+               The data to write.
+             </dd>
+             <dt>DOMString peerAddress</dt>
+             <dd>
+               The address of the remote machine.
+             </dd> 
+             <dt>unsigned short peerPort</dt>
+             <dd>
+               The port of the remote machine.
+             </dd>                          
+                     
+          </dl>
+        </dd>            
+                            
+      </dl>  
+            
+    </section>    
+    
+    <section>
+      <h2>Interface <a>TCPSocket</a></h2>
+      <p>The <a>TCPSocket</a> interface defines the attributes and methods for a TCP socket</p> 
+      
+      <pre class="example highlight">
+        // Create a TCP socket
+        mySocket = new TCPSocket ();
+        // Further code TBD...........        
+      </pre>
+      
+      <dl title="[Constructor (optional CreateOptions options)] 
+                 interface TCPSocket : RawSocket "
+          class="idl">  
+          
+        <dt> void accept()</dt>
+        <dd>        
+          <p>This method applies to TCP sockets only. Registers a callback function to be called when a connection is accepted on this listening server 
+             socket. Listen must be called first. If there is already an active accept callback, this callback will be invoked immediately with an error 
+             as the resultCode. </p>  
+          <p>
+            Throws DOMException <code>InvalidAccessError</code> if any input parameter is not compatible with the expected type for that parameter.<br /> 
+            Throws DOMException <code>InvalidStateError</code> if the socket was not in "listen" state.
+          </p>   
+          <dl class='parameters'>
+          
+             <dt>AcceptCallback callback</dt>
+             <dd>
+               Called when a when a connection is accepted on this listening server socket.
+             </dd>            
+                
+          </dl>       
+        </dd>   
+       
+        <dt> void listen()</dt>
+        <dd>        
+          <p>This method applies to TCP sockets only. Listens for connections on the specified port and address. This effectively makes this a server 
+             socket, and client socket functions (connect, read, write) can no longer be used on this socket. </p>  
+          <p>
+            Throws DOMException <code>InvalidAccessError</code> if any input parameter is not compatible with the expected type for that parameter.
+          </p>   
+          <dl class='parameters'>
+          
+             <dt>ListenCallback callback</dt>
+             <dd>
+               Called when a socket has been prepared for incoming connections.
+             </dd>            
+             <dt>DOMString localAddress</dt>
+             <dd>
+               The address of the local machine.
+             </dd>
+             <dt>unsigned short localPort</dt>
+             <dd>
+               The port of the local machine.
+             </dd>      
+             <dt>optional unsigned short backlog</dt>
+             <dd>
+               The maximum number of connection requests that can be queued before the system starts rejecting incoming requests.
+             </dd>    
+                     
+          </dl>       
+        </dd>           
+       
+        <dt> void setKeepAlive()</dt>
+        <dd>        
+          <p>Enables or disables the keep-alive functionality for a TCP connection.</p>        
+ 
+          <p>
+            Throws DOMException <code>InvalidAccessError</code> if any input parameter is not compatible with the expected type for that parameter.
+          </p>
+        
+          <dl class='parameters'>
+
+             <dt>SetKeepAliveCallback callback</dt>
+             <dd>
+               Called when the setKeepAlive attempt is complete.
+             </dd>   
+             <dt>boolean enable</dt>
+             <dd>
+               If true, enable keep-alive functionality.
+             </dd>
+             <dt>optional long delay</dt>
+             <dd>
+               The delay seconds between the last data packet received and the first keepalive probe. Default is 0.
+             </dd>     
+                                  
+          </dl>
+        </dd>         
+        
+        <dt> void setNoDelay()</dt>
+        <dd>        
+          <p>Sets or clears TCP_NODELAY for a TCP connection. Nagle's algorithm will be disabled when TCP_NODELAY is set.</p>        
+ 
+          <p>
+            Throws DOMException <code>InvalidAccessError</code> if any input parameter is not compatible with the expected type for that parameter.
+          </p>
+        
+          <dl class='parameters'>
+
+             <dt>SetNoDelayCallback callback</dt>
+             <dd>
+               Called when the setNoDelay attempt is complete.
+             </dd>   
+             <dt>boolean enable</dt>
+             <dd>
+               If true, disables Nagle's algorithm.
+             </dd>
+                                  
+          </dl>
+        </dd>                              
+                            
+      </dl>  
+            
+    </section>             
+    
+    <section>
+      <h2>Dictionary <a>AcceptInfo</a></h2>
+      <p>
+        Result of accept operation.
+      </p>      
+      <dl title="dictionary AcceptInfo"
+          class="idl">
+          
+        <dt>DOMError? error</dt>
+        <dd>Null if accept() was successful else a DOMError object detailing what went wrong. Error codes TBD.</dd>
+        <dt>TCPSocket? socket</dt>
+        <dd>A new socket object for the accepted socket object or null if error. This new socket object is to be used for further communication with 
+            the remote host through subsequent read() and write() calls.</dd>       
+   
+      </dl>              
+    </section>      
+    
+    <section>
+      <h2>Dictionary <a>CreateOptions</a></h2>
+      <p>
+        Socket create options.
+      </p>      
+      <dl title="dictionary CreateOptions"
+          class="idl">
+          
+        <dt>boolean useSecureTransport</dt>
+        <dd>True if socket uses SSL or TLS. Default is false.</dd>
+        <dd>True allows the socket to be bound to an address that is already in use. This is for example needed for UPnP SSDP
+            which uses a fixed multicast channel and port reserved for SSDP. Default is False.</dd>
+        <dt>boolean addressReuse</dt>
+        <dd>True allows the socket to be bound to an address that is already in use. This is for example needed for UPnP SSDP
+            which uses a fixed multicast channel and port reserved for SSDP. Default is False.</dd>
+        <dt>boolean loopback</dt>
+        <dd>True means that data you send is looped back to your host. Default is True.</dd>
+   
+      </dl>              
+    </section>      
+    
+    <section>
+      <h2>Dictionary <a>ReadInfo</a></h2>
+      <p>
+        Result of read operation.
+      </p>      
+      <dl title="dictionary ReadInfo"
+          class="idl">
+          
+        <dt>DOMError? error</dt>
+        <dd>Null if read() was successful else a DOMError object detailing what went wrong. Error codes TBD (for example ”socket disconnected”, 
+            “no byte available” )</dd>
+        <dt>ArrayBuffer? data</dt>
+        <dd>The read data or null if error.</dd>
+   
+      </dl>              
+    </section>       
+    
+    <section>
+      <h2>Dictionary <a>RecvFromInfo</a></h2>
+      <p>
+        Result of recvFrom() operation.
+      </p>      
+      <dl title="dictionary RecvFromInfo"
+          class="idl">          
+          
+        <dt>DOMError? error</dt>
+        <dd>Null if recvFrom() was successful else a DOMError object detailing what went wrong. Error codes TBD.</dd>
+        <dt>ArrayBuffer? data</dt>
+        <dd>The received data or null if error.</dd>
+        <dt>DOMString? peerAddress</dt>
+        <dd>The address of the remote machine or null if error.</dd>        
+        <dt>unsigned short? peerPort</dt>
+        <dd>The port of the remote machine or null if error.</dd>
+           
+      </dl>              
+    </section>        
+    
+    <section>
+      <h2>Dictionary <a>WriteInfo</a></h2>
+      <p>
+        Result of sendTo() operation.
+      </p>      
+      <dl title="dictionary WriteInfo"
+          class="idl">
+          
+        <dt>DOMError? error</dt>
+        <dd>Null if sendTo() was successful else a DOMError object detailing what went wrong. Error codes TBD. </dd>
+        <dt>long? bytesWritten</dt>
+        <dd>The number of bytes sent, or null if error. </dd>
+           
+      </dl>              
+    </section>       
+    
+    <section>
+      <h2> Callbacks </h2>
+      
+        <section>
+          <h3> AcceptCallback </h3>
+          <p> Called when when a connection is accepted on this listening server socket. </p>         
+             
+          <dl id='cb-less-basic' class='idl' title='callback AcceptCallback = void'>
+            <dt>AcceptInfo acceptInfo</dt>
+            <dd>Info for the accepted connection.</dd>
+          </dl>
+        </section>         
+      
+        <section>
+          <h3> BindCallback </h3>
+          <p> Called when the bind attempt is complete. </p>         
+             
+          <dl id='cb-less-basic' class='idl' title='callback BindCallback = void'>
+            <dt>DOMError? error</dt>
+            <dd>Null if Bind() was successful else a DOMError object detailing what went wrong. Error codes TBD. </dd>
+          </dl>
+        </section>   
+        
+        <section>
+          <h3> ConnectCallback </h3>
+          <p> Called when the connection attempt is complete. </p>         
+             
+          <dl id='cb-less-basic' class='idl' title='callback ConnectCallback = void'>
+            <dt>DOMError? error</dt>
+            <dd>Null if Connect() was successful else a DOMError object detailing what went wrong. Error codes TBD.</dd>
+          </dl>
+        </section>          
+        
+        <section>
+          <h3> ListenCallback </h3>
+          <p> Called when the listen attempt is complete. </p>         
+             
+          <dl id='cb-less-basic' class='idl' title='callback ListenCallback = void'>
+            <dt>DOMError? error</dt>
+            <dd>Null if socket was successfully prepared for incoming connections else a DOMError object detailing what went wrong. Error codes TBD.</dd>
+          </dl>
+        </section>            
+        
+        <section>
+          <h3> ReadCallback </h3>
+          <p> Delivers data that was available to be read without blocking. </p>         
+             
+          <dl id='cb-less-basic' class='idl' title='callback ReadCallback = void'>
+            <dt>ReadInfo readInfo</dt>
+            <dd>Result of the read operation.</dd>
+          </dl>
+        </section>          
+        
+        <section>
+          <h3> RecvFromCallback </h3>
+          <p> Returns result of the recvFrom operation. </p>         
+             
+          <dl id='cb-less-basic' class='idl' title='callback RecvFromCallback = void'>
+            <dt>RecvFromInfo recvFromInfo</dt>
+            <dd>Result of the recvFrom operation.</dd>
+          </dl>
+        </section>        
+        
+        <section>
+          <h3> SendToCallback </h3>
+          <p>Called when the send operation completes without blocking or an error occurs. </p>         
+             
+          <dl id='cb-less-basic' class='idl' title='callback SendToCallback = void'>
+            <dt>WriteInfo writeInfo</dt>
+            <dd>Result of the sendTo() operation.</dd>
+          </dl>
+        </section>        
+        
+        <section>
+          <h3> SetKeepAliveCallback </h3>
+          <p>Called when the setKeepAlive attempt is complete.</p>         
+             
+          <dl id='cb-less-basic' class='idl' title='callback SetKeepAliveCallback = void'>
+            <dt>DOMError? error</dt>
+            <dd>Null if setKeepAlive() was successful else a DOMError object detailing what went wrong. Error codes TBD.</dd>
+          </dl>
+        </section>          
+        
+        <section>
+          <h3> SetNoDelayCallback </h3>
+          <p>Called when the setNoDelay attempt is complete.</p>         
+             
+          <dl id='cb-less-basic' class='idl' title='callback SetNoDelayCallback = void'>
+            <dt>DOMError? error</dt>
+            <dd>Null if setNoDelay() was successful else a DOMError object detailing what went wrong. Error codes TBD.</dd>
+          </dl>
+        </section>        
+        
+        <section>
+          <h3> WriteCallback </h3>
+          <p>Called when the write operation completes without blocking or an error occurs. </p>         
+             
+          <dl id='cb-less-basic' class='idl' title='callback WriteCallback = void'>
+            <dt>WriteInfo writeInfo</dt>
+            <dd>Result of the write() operation.</dd>
+          </dl>
+        </section>             
+   
+            
+    </section>
+           
+    <section class='appendix'>
+      <h2>Acknowledgements</h2>
+      <p>
+        Many thanks to Robin Berjon for making our lives so much easier with his cool tool.
+      </p>
+    </section>
+  </body>
 </html>
