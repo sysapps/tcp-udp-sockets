@@ -386,24 +386,52 @@
       
       <pre class="example highlight">
         // 
-        // This example shows TBD ............... 
-        //
+        // This example shows a simple TCP echo client. 
+        // The client will send "Hello World" to the server on port 6789 log what has been received from the server.
+        //        
+        try {
         
-        // Create a TCP socket
-        var mySocket = new TCPSocket (...); 
-               
+          //  Create a new TCP client socket and connect to remote host
+          var mySocket = new TCPSocket ("127.0.0.1", 6789);  
+          mySocket.onopen = function() {                    
+            try {
+              // Send data to server
+              var moreBufferingOK = mySocket.sendTCP("Hello World");
+              console.log('Data sent to server!'); 
+              
+              // Receive response from server
+              mySocket.onreceivedtcp = function (receivedTCPevent) {
+                console.log('Data received from server'+receivedTCPevent.data);
+                
+                // Close the connection
+                mySocket.close();                               
+              }
+              
+            }        
+            catch(err) {  
+              // Sending failed      
+              console.error('Sending failed: ' + err.name);
+            }                     
+          }  
+          
+          // Connection has been closed 
+          mySocket.onclose = function {
+            console.log('Connection has been closed');
+          }  
+          
+          // Handle errors
+          mySocket.onerror = function(err) {
+            console.error('Error: ' + err.name);
+          }             
+          
+        }        
+          catch(err) {  
+          
+          // Handle runtime exception    
+          console.error('Could not create a TCP socket: ' + err.name);
+        }                       
         
-      </pre>
-      
-      <pre class="example highlight">
-        // 
-        // This example shows TBD.......... 
-        //
-            
-        // Create a TCP socket and .........
-        var mySocket = new TCPSocket (.....);        
-        
-      </pre>      
+      </pre>     
       
       <dl title="[Constructor (DOMString remoteAddress, unsigned short remotePort, optional TCPOptions options)] 
                  interface TCPSocket : RawSocket"
@@ -614,10 +642,40 @@
       
       <pre class="example highlight">
         // 
-        // This example shows a simple http server handling GET requests
+        // This example shows a simple TCP echo server. 
+        // The server will listen on port 6789 an respond back with what ever has been sent to the server.
         //        
-        TBD
-        
+        try {
+          //  Create a new server socket that listens on port 6789
+          var myServerSocket = new TCPServerSocket ({"localPort":6789});
+          
+          myServerSocket.onconnection = function (connectionEvent) { 
+            var connectedSocket = connectionEvent.connectedSocket;
+            // Read the data
+            connectedSocket.onreceivedtcp = function (receivedTCPevent) {
+               var data = receivedTCPevent.data;               
+               try {
+                 // Send data back to client
+                 var moreBufferingOK = connectedSocket.sendTCP(data);
+                 console.log('Response sent to client!'); 
+               }        
+                 catch(err) {  
+                 // Sending failed      
+                 console.error('Sending failed: ' + err.name);
+               }                                                            
+            }  
+            
+            // Connection has been closed 
+            connectedSocket.onclose = function {
+              console.log('Connection has been closed');
+            }        
+          
+          }
+        }        
+        catch(err) {  
+          // Handle runtime exception    
+          console.error('Could not create a TCP server socket: ' + err.name);
+        }      
         
       </pre>   
       
@@ -643,7 +701,7 @@
             
         <dt> void closeServer()</dt>
         <dd>        
-          <p>Closes the TCP server socket, i.e. listening for incoming connections is stopped.</p>        
+          <p>Closes the TCP server socket, i.e. listening for incoming connections is stopped. Existing TCP connections are kept open.</p>        
         </dd>                                                              
                             
       </dl>   
@@ -667,7 +725,7 @@
       <p> The <dfn><code>closeServer</code></dfn> method when invoked MUST run the following steps:
         <ol>
          <li>If a TCP connection setup is in progress the connection setup is finalized according to the descriptions below.
-         <li>Stop listening to connection attempts from clients.         
+         <li>Stop listening to further connection attempts from clients.         
         </ol>
       </p>                  
       
