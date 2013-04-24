@@ -200,27 +200,61 @@
                  interface UDPSocket : EventTarget"
           class="idl">                           
 
-        <dt>readonly attribute UDPOptions options</dt>
-        <dd>The UDP socket create options.</dd>
+        <dt>readonly attribute DOMString localAddress</dt>
+        <dd>The IPv4/6 address of the interface, e.g. wifi or 3G, that the 
+            UDPSocket object is bound to. Can be set by the <code>options</code>
+            argument in the constructor. If not set the user agent 
+            binds the socket to the IPv4/6 address of the default local interface. </dd>   
+        
+        <dt>readonly attribute unsigned short localPort</dt>
+        <dd>The local port that the UDPSocket object is bound to. Can be set by 
+            the <code>options</code> argument in the constructor. If not set the
+            user agent binds the socket to a random local port number. </dd>             
+
+        <dt>readonly attribute DOMString? remoteAddress</dt>
+        <dd>The default remote IPv4/6 address that is used for 
+            subsequent send() calls. Null if not stated by the options argument
+            of the constructor.</dd>   
+        
+        <dt>readonly attribute unsigned short? remotePort</dt>
+        <dd>The default remote port that is used for subsequent send() calls.
+            Null if not stated by the options argument of the constructor</dd>  
             
+        <dt>readonly attribute boolean addressReuse</dt>
+        <dd>True allows the socket to be bound to an address that is already in use.
+            Can be set by the <code>options</code> argument in the constructor. 
+            Default is True.</dd>
+            
+        <dt>readonly attribute boolean loopback</dt>
+        <dd>True means that data you send is looped back to your host.
+            Can be set by the <code>options</code> argument in the constructor.  
+            Default is False.</dd>               
+                                     
         <dt>readonly attribute unsigned long bufferedAmount</dt>
-        <dd>This attribute contains the number of bytes which have previously been buffered by calls to the send methods of this socket.</dd>                
+        <dd>This attribute contains the number of bytes which have previously been 
+            buffered by calls to the send methods of this socket.</dd>                
         
         <dt>readonly attribute ReadyState readyState;</dt>
-        <dd>The state of the UDP Socket object. A UDP Socket object can be in "open" or "closed" states. </dd> 
+        <dd>The state of the UDP Socket object. A UDP Socket object can be in "open" 
+            or "closed" states. </dd> 
 
         <dt>attribute EventHandler ondrain</dt>
-        <dd>The ondrain event handler will be called upon detection that previously-buffered data has been written to the network and 
-         it is possible to buffer more data received from the application, </dd>   
+        <dd>The ondrain event handler will be called upon detection that 
+            previously-buffered data has been written to the network and 
+            it is possible to buffer more data received from the application, </dd>   
         
         <dt>attribute EventHandler onerror</dt>
-        <dd>The onerror event handler will be called when there is an error. The data attribute of the event passed to the onerror handler will have a 
+        <dd>The onerror event handler will be called when there is an error. 
+            The data attribute of the event passed to the onerror handler will have a 
             description of the kind of error.</dd>          
 
         <dt>attribute EventHandler onmessage</dt>
-        <dd>Event handler for received UDP data. The onmessage handler will be called repeatedly and asynchronously after the UDPSocket object 
-            has been created, every time a UDP datagram has been received and was read. At any time, the client may choose to pause reading and receiving onmessage
-            callbacks, by calling the socket's suspend() method. Further invocations of onmessage will be paused until resume() is called.</dd>  
+        <dd>Event handler for received UDP data. The onmessage handler will be called 
+            repeatedly and asynchronously after the UDPSocket object has been created, 
+            every time a UDP datagram has been received and was read. At any time, the 
+            client may choose to pause reading and receiving onmessage callbacks, 
+            by calling the socket's suspend() method. Further invocations of onmessage 
+            will be paused until resume() is called.</dd>  
         
         <dt> void close()</dt>
         <dd>        
@@ -277,9 +311,14 @@
         
           <dl class='parameters'>
 
-             <dt>DOMString data</dt>
+             <dt>(DOMString or Blob or ArrayBuffer or ArrayBufferView) data</dt>
              <dd>
-               The data to write represented as a sequence of Unicode characters.
+               The data to write in one of the alternative representations as
+               stated below: <br/>
+               - Represented as a sequence of Unicode characters.<br/>
+               - As raw data represented by the Blob object.<br/>
+               - Represented as an ArrayBuffer object. <br/>
+               - Represented by the section of the buffer described by the ArrayBuffer object that the ArrayBufferView object references.               
              </dd>  
                      
              <dt>optional DOMString? remoteAddress</dt>
@@ -295,102 +334,22 @@
           </dl>
                    
         </dd>           
-        
-        <dt> boolean send()</dt>
-        <dd>        
-          <p>Sends data on the given UDP socket to the given address and port.</p>           
-          <p>If remoteAddress and remotePort arguments are not given or null the destination is the default address and port given by the UDPSocket 
-             constructor's options argument's <code>remoteAddress</code> and <code>remotePort</code> fields.</p>                   
-        
-          <dl class='parameters'>
-
-             <dt>Blob data</dt>
-             <dd>
-               The data to write as raw data represented by the Blob object.
-             </dd>  
-                     
-             <dt>optional DOMString? remoteAddress</dt>
-             <dd>
-               The address of the remote machine. 
-             </dd> 
-             
-             <dt>optional unsigned short? remotePort</dt>
-             <dd>
-               The port of the remote machine.
-             </dd>                          
-                     
-          </dl>
-                   
-        </dd>                 
-        
-        <dt> boolean send()</dt>
-        <dd>        
-          <p>Sends data on the given UDP socket to the given address and port.</p>  
-          <p>If remoteAddress and remotePort arguments are not given or null the destination is the default address and port given by the UDPSocket 
-             constructor's options argument's <code>remoteAddress</code> and <code>remotePort</code> fields.</p>                       
-        
-          <dl class='parameters'>
-
-             <dt>ArrayBuffer data</dt>
-             <dd>
-               The data to write represented as an ArrayBuffer object.
-             </dd>  
-                     
-             <dt>optional DOMString? remoteAddress</dt>
-             <dd>
-               The address of the remote machine. 
-             </dd> 
-             
-             <dt>optional unsigned short? remotePort</dt>
-             <dd>
-               The port of the remote machine.
-             </dd>                          
-                     
-          </dl>
-                   
-        </dd>       
-        
-        <dt> boolean send()</dt>
-        <dd>        
-          <p>Sends data on the given UDP socket to the given address and port.</p> 
-          <p>If remoteAddress and remotePort arguments are not given or null the destination is the default address and port given by the UDPSocket 
-             constructor's options argument's <code>remoteAddress</code> and <code>remotePort</code> fields.</p>                        
-        
-          <dl class='parameters'>
-
-             <dt>ArrayBufferView data</dt>
-             <dd>
-               The data to write represented by the section of the buffer described by the ArrayBuffer object that the ArrayBufferView object references..
-             </dd>  
-                     
-             <dt>optional DOMString? remoteAddress</dt>
-             <dd>
-               The address of the remote machine. 
-             </dd> 
-             
-             <dt>optional unsigned short? remotePort</dt>
-             <dd>
-               The port of the remote machine.
-             </dd>                          
-                     
-          </dl>
-                   
-        </dd>                                             
+                                                 
                             
       </dl>     
  
       <p>When the <a>UDPSocket</a> constructor is invoked, the User Agent MUST run the following steps:        
         <ol>
-         <li>If the <code>options.localAddress</code> argument is absent or null then bind the socket to the IPv4/6 address of the default local interface. 
+         <li>If the <code>options.localAddress</code> argument is absent then bind the socket to the IPv4/6 address of the default local interface. 
              Otherwise, if the requested local address is free or if it is in use and the <code>options.addressReuse</code> attribute is 
-             true then bind the socket to the IPv4/6 address of the requested local interface. Else, throw an <code>InvalidAccessError</code> exception and abort these steps. 
-         <li>If the <code>options.localPort</code> argument is absent or null bind then the socket to any available local port. Otherwise, if the requested 
-             local port is free or if it is in use and the <code>options.addressReuse</code> attribute is true then bind the socket to the 
+             true or absent then bind the socket to the IPv4/6 address of the requested local interface. Else, throw an <code>InvalidAccessError</code> exception and abort these steps. 
+         <li>If the <code>options.localPort</code> argument is absent bind then the socket to any available local port. Otherwise, if the requested 
+             local port is free or if it is in use and the <code>options.addressReuse</code> attribute is true or absent then bind the socket to the 
              requested local port. Else, throw an <code>InvalidAccessError</code> exception and abort these steps.
-         <li>If the <code>options.remoteAddress</code> argument is defined then set the default remote address of the socket to the requested address.  
-         <li>If the <code>options.remotePort</code> argument is defined then set the default remote port to the requested port.              
-         <li>Create a new <code>UDPSocket</code> object and set the <code>options</code> attribute fields according to the constructors <code>options</code> 
-             argument if it was present, else set the <code>options</code> attribute to the default values.
+         <li>If the <code>options.remoteAddress</code> field is present then set the default remote address of the socket to the requested address.  
+         <li>If the <code>options.remotePort</code> argument is present then set the default remote port to the requested port.              
+         <li>Create a new <code>UDPSocket</code> object and if the constructor's <code>options</code> argument is present set the corresponding attributes to the values of the 
+             fields that are present in the <code>options</code> argument, else set the corresponding attributes to the default values.
          <li>Set the <code>readyState</code> attribute to "open".  
          <li>Set the <code>bufferedAmount</code> attribute to 0.                
          <li>Return the newly created <code>UDPSocket</code> object to the application.
@@ -519,7 +478,7 @@
         try {
         
           //  Create a new TCP client socket and connect to remote host
-          var mySocket = new TCPSocket ({"remoteAddress":"127.0.0.1", "remotePort":6789});  
+          var mySocket = new TCPSocket ("127.0.0.1", 6789);  
           mySocket.onopen = function() {                    
             try {
               // Send data to server
@@ -562,12 +521,26 @@
         
       </pre>      
       
-      <dl title="[Constructor (TCPOptions options)] 
+      <dl title="[Constructor (DOMString remoteAddress, unsigned short remotePort, optional TCPOptions options)] 
                  interface TCPSocket : EventTarget"
-          class="idl">                           
+          class="idl">         
+          
+        <dt>readonly attribute DOMString remoteAddress</dt>
+        <dd>The IPv4/6 address of the peer as stated by the remoteAddress argument in the constructor.</dd>   
+        
+        <dt>readonly attribute DOMString remotePort</dt>
+        <dd>The port of the peer as stated by the remoteAddress argument in the constructor. </dd>                              
 
-        <dt>readonly attribute TCPOptions options</dt>
-        <dd>The TCP socket create options.</dd>
+        <dt>readonly attribute DOMString localAddress</dt>
+        <dd>The IPv4/6 address of the interface, e.g. wifi or 3G, that the 
+            TCPSocket object is bound to. Can be set by the <code>options</code>
+            argument in the constructor. If not set the user agent 
+            binds the socket to the IPv4/6 address of the default local interface. </dd>   
+        
+        <dt>readonly attribute unsigned short localPort</dt>
+        <dd>The local port that the TCPSocket object is bound to. Can be set by 
+            the <code>options</code> argument in the constructor. If not set the
+            user agent binds the socket to a random local port number. </dd>             
             
         <dt>readonly attribute unsigned long bufferedAmount</dt>
         <dd>This attribute contains the number of bytes which have previously been buffered by calls to the send methods of this socket.</dd>                
@@ -627,75 +600,33 @@
         
           <dl class='parameters'>
 
-             <dt>DOMString data</dt>
+             <dt>(DOMString or Blob or ArrayBuffer or ArrayBufferView) data</dt>
              <dd>
-               The data to write represented as a sequence of Unicode characters.
+               The data to write in one of the alternative representations as
+               stated below: <br/>
+               - Represented as a sequence of Unicode characters.<br/>
+               - As raw data represented by the Blob object.<br/>
+               - Represented as an ArrayBuffer object. <br/>
+               - Represented by the section of the buffer described by the ArrayBuffer object that the ArrayBufferView object references.               
              </dd>  
                      
           </dl>
                    
-        </dd>           
-        
-        <dt> boolean send()</dt>
-        <dd>        
-          <p>Sends data on the given connected TCP socket.</p>                      
-        
-          <dl class='parameters'>
-
-             <dt>Blob data</dt>
-             <dd>
-               The data to write as raw data represented by the Blob object.
-             </dd>                       
-                     
-          </dl>
-                   
-        </dd>                 
-        
-        <dt> boolean send()</dt>
-        <dd>        
-          <p>Sends data on the given connected TCP socket.</p>                    
-        
-          <dl class='parameters'>
-
-             <dt>ArrayBuffer data</dt>
-             <dd>
-               The data to write represented as an ArrayBuffer object.
-             </dd>  
-                     
-          </dl>
-                   
-        </dd>       
-        
-        <dt> boolean send()</dt>
-        <dd>        
-          <p>Sends data on the given connected TCP socket.</p>                         
-        
-          <dl class='parameters'>
-
-             <dt>ArrayBufferView data</dt>
-             <dd>
-               The data to write represented by the section of the buffer described by the ArrayBuffer object that the ArrayBufferView object references..
-             </dd>  
-                     
-          </dl>
-                   
-        </dd>                                             
+        </dd>                                                        
                             
       </dl>          
       
       <p>When the <a>TCPSocket</a> constructor is invoked, the User Agent MUST run the following steps:        
         <ol>
-         <li>If the <code>options.remoteAddress</code> argument is not a valid IPv4/6 address or the <code>options.remotePort</code> argument is not a valid port number
-             then throw an <code>InvalidAccessError</code> exception and abort these steps, else set the <code>options.remoteAddress</code> and 
-             <code>options.remotePort</code> attributes to the requested values.
-         <li>If the <code>options.localAddress</code> argument is absent or null then bind the socket to the IPv4/6 address of the default local interface. . 
-             Otherwise, if the requested local address is free or if it is in use and the <code>options.addressReuse</code> attribute is 
-             true then bind the socket to the IPv4/6 address of the requested local interface. Else, throw an <code>InvalidAccessError</code> exception and abort these steps.
-         <li>If the <code>options.localPort</code> argument is absent or null bind then the socket to any available local port. Otherwise, if the requested 
-             local port is free or if it is in use and the <code>options.addressReuse</code> attribute is true then bind the socket to the 
+         <li>If the <code>remoteAddress</code> argument is not a valid IPv4/6 address or the <code>remotePort</code> argument is not a valid port number
+             then throw an <code>InvalidAccessError</code> exception and abort these steps, else set the <code>remoteAddress</code> and 
+             <code>remotePort</code> attributes to the requested values.
+         <li>If the <code>options.localAddress</code> argument is absent bind the socket to the IPv4/6 address of the default local interface.
+             Otherwise, if the requested local address is free then bind the socket to the IPv4/6 address of the requested local interface. Else, throw an <code>InvalidAccessError</code> exception and abort these steps.
+         <li>If the <code>options.localPort</code> argument is absent bind then the socket to any available local port. Otherwise, if the requested 
+             local port is free bind the socket to the 
              requested local port. Else, throw an <code>InvalidAccessError</code> exception and abort these steps.
-         <li>Set the <code>options</code> attribute fields according to the constructors <code>options</code> argument or to the default values for fields not present in the 
-             constructors <code>options</code> argument.   
+         <li>Set the <code>localAddress</code> and <code>localPort</code> attributes to the selected values according to above.  
          <li>Set the <code>readyState</code> attribute to "connecting".    
          <li>Set the <code>bufferedAmount</code> attribute to 0.             
          <li>Attempt to connect to the requested address and port in the background (without blocking scripts).       
@@ -720,7 +651,7 @@
                <li>Abort these steps.            
              </ol>  
          <li>Make a request to the system to send TCP data with data passed in the <code>data</code> parameter to the address and port of the recipient as stated by the 
-             UDPSocket object constructor's <code>options.remoteAddress</code> and <code>options.remotePort</code> fields.              
+             TCPSocket object constructor's <code>remoteAddress</code> and <code>remotePort</code> fields.              
          <li>When the requests has been completed set the return value of the method to true or false as a hint to the caller that they may 
               either continue sending more data immediately, or should want to wait until the transport layer has transmitted buffered data that already 
               have been written to the socket before buffering more. When less than an implementation specific value has been buffered and it's safe to immediately write more set the return value to true.
@@ -887,8 +818,8 @@
           //  Create a new server socket that listens on port 6789
           var myServerSocket = new TCPServerSocket ({"localPort":6789});
           
-          myServerSocket.onconnection = function (connectionEvent) { 
-            var connectedSocket = connectionEvent.connectedSocket;
+          myServerSocket.onconnection = function (connectEvent) { 
+            var connectedSocket = connectEvent.connectedSocket;
             // Read the data
             connectedSocket.onmessage = function (messageEvent) {
                var data = messageEvent.data;               
@@ -921,14 +852,22 @@
                  interface TCPServerSocket : EventTarget"
           class="idl">                
         
-        <dt>readonly attribute TCPServerOptions options</dt>
-        <dd>The TCP server options.</dd>               
+        <dt>readonly attribute DOMString localAddress</dt>
+        <dd>The IPv4/6 address of the interface, e.g. wifi or 3G, that the 
+            TCPServer Socket object is bound to. Can be set by the <code>options</code>
+            argument in the constructor. If not set the user agent 
+            binds the socket to the IPv4/6 address of the default local interface. </dd>   
+        
+        <dt>readonly attribute unsigned short localPort</dt>
+        <dd>The local port that the TCPServerSocket object is bound to. Can be set by 
+            the <code>options</code> argument in the constructor. If not set the
+            user agent binds the socket to a random local port number. </dd>                   
         
         <dt>readonly attribute ReadyState readyState;</dt>
         <dd>The state of the TCP server object. A TCP server socket object can be in "open" or "closed" states. </dd>         
 
-        <dt>attribute EventHandler onconnection</dt>
-        <dd>Event handler for incoming connections on the specified port and address.</dd> 
+        <dt>attribute EventHandler onconnect</dt>
+        <dd>Event handler for an accepted incoming connections on the specified port and address.</dd> 
         
         <dt>attribute EventHandler onerror</dt>
         <dd>Event handler for errors on incoming connections. The data attribute of the event passed to the onerror handler will have a 
@@ -954,14 +893,13 @@
       <p>When the <a>TCPServerSocket</a> constructor is invoked, the User Agent MUST run the following steps:        
         <ol>
          <li>If any input argument is invalid throw an <code>InvalidAccessError</code> exception and abort these steps.
-         <li>If the <code>options.localAddress</code> argument is absent or null then listen to the IPv4/6 address of the default local interface. 
-             Otherwise, if the requested local address is free or if it is in use and the <code>options.addressReuse</code> attribute is 
-             true then listen to the IPv4/6 address of the requested local interface. Else, throw an <code>InvalidAccessError</code> exception and abort these steps.         
-         <li>If the <code>options.localPort</code> argument is absent or null then bind the socket to any available local port. Otherwise, if the 
-             requested local port is free or if it is in use and the <code>options.addressReuse</code> attribute is true then bind the socket to the 
+         <li>If the <code>options.localAddress</code> argument is absent then listen to the IPv4/6 address of the default local interface. 
+             Otherwise, if the requested local address is free then listen to the IPv4/6 address of the requested local interface. 
+             Else, throw an <code>InvalidAccessError</code> exception and abort these steps.         
+         <li>If the <code>options.localPort</code> argument is absent then bind the socket to any available local port. Otherwise, if the 
+             requested local port is free then bind the socket to the 
              requested local port. Else, throw an <code>InvalidAccessError</code> exception and abort these steps.                                
-         <li>Create a new <a>TCPServerSocket</a> object and set the <code>options</code> attribute fields according to the constructors 
-             <code>options</code> argument or to the default values for fields not present in the constructors <code>options</code> argument.
+         <li>Create a new <a>TCPServerSocket</a> object and set the <code>localAddress</code> and <code>localPort</code> attributes to selected values accoring to above.
          <li>Set the <code>readyState</code> attribute to "open".   
          <li>Start listening for for connections on the specified port and address.
          <li>Return the newly created <a>TCPServerSocket</a> object to the application.
@@ -979,17 +917,17 @@
       <p>Upon a new successful connection to the TCP server socket the <a>user agent</a> MUST run the following steps:
       
         <ol>
-          <li>create a new instance of <a>ConnectionEvent</a>.
+          <li>create a new instance of <a>ConnectEvent</a>.
           <li>create a new instance of <a>TCPSocket</a>.
-          <li>set the <code>options.remoteAddress</code> attribute of the newly created <a>TCPSocket</a> object to the IPv4/6 address of the peer.    
-          <li>set the <code>options.remotePort</code> attribute of the newly created <a>TCPSocket</a> object to the source port of the of the peer. 
-          <li>set the <code>options.localAddress</code> attribute of the newly created <a>TCPSocket</a> object to the used local IPv4/6 address.    
-          <li>set the <code>options.localPort</code> attribute of the newly created <a>TCPSocket</a> object to the used local source port.   
+          <li>set the <code>remoteAddress</code> attribute of the newly created <a>TCPSocket</a> object to the IPv4/6 address of the peer.    
+          <li>set the <code>remotePort</code> attribute of the newly created <a>TCPSocket</a> object to the source port of the of the peer. 
+          <li>set the <code>localAddress</code> attribute of the newly created <a>TCPSocket</a> object to the used local IPv4/6 address.    
+          <li>set the <code>localPort</code> attribute of the newly created <a>TCPSocket</a> object to the used local source port.   
           <li>set the <code>readyState</code> attribute of the newly created <a>TCPSocket</a> object to "open".    
           <li>set the <code>bufferedAmount</code> attribute of the newly created <a>TCPSocket</a> object to 0.                                                      
-          <li>set the <code>connectedSocket</code> attribute of the <a>ConnectionEvent</a> object to the newly created <a>TCPSocket</a> object.
+          <li>set the <code>connectedSocket</code> attribute of the <a>ConnectEvent</a> object to the newly created <a>TCPSocket</a> object.
 
-          <li><a>queue a task</a> to <a>fire an event</a> named <code><a>connection</a></code> with the newly created <a>ConnectionEvent</a> instance at the <a>TCPServerSocket</a> object.
+          <li><a>queue a task</a> to <a>fire an event</a> named <code><a>connect</a></code> with the newly created <a>ConnectEvent</a> instance at the <a>TCPServerSocket</a> object.
         </ol>
       </p>     
       
@@ -1017,8 +955,8 @@
           </thead>
           <tbody>
             <tr>
-              <td><strong><code>onconnection</code></strong></td>
-              <td><code><dfn>connection</dfn></code></td>
+              <td><strong><code>onconnect</code></strong></td>
+              <td><code><dfn>connect</dfn></code></td>
             </tr> 
             <tr>
               <td><strong><code>onerror</code></strong></td>
@@ -1027,7 +965,7 @@
           </tbody>
         </table>
 
-        <p>The <code>connection</code> <a>event</a> SHALL implement the <a>ConnectionEvent</a> interface. </p>  
+        <p>The <code>connect</code> <a>event</a> SHALL implement the <a>ConnectEvent</a> interface. </p>  
         <p>The <code>error</code> <a>event</a> SHALL implement the <a>ErrorEvent</a> interface. </p>                
 
       </section>
@@ -1050,10 +988,10 @@
     </section>        
     
     <section>
-      <h2>Interface <a>ConnectionEvent</a></h2>
-      <p>The <a>ConnectionEvent</a> interface represents events related to connections to a TCP server socket.</p>
+      <h2>Interface <a>ConnectEvent</a></h2>
+      <p>The <a>ConnectEvent</a> interface represents events related to accepted connections to a TCP server socket.</p>
       <dl title="[NoInterfaceObject]
-                 interface ConnectionEvent : Event"
+                 interface ConnectEvent : Event"
           class="idl">
         <dt>readonly attribute TCPSocket connectedSocket </dt>
         <dd>The new TCP socket object for the accepted socket. This new socket object is to be used for further communication with the client.</dd>        
@@ -1074,31 +1012,37 @@
     <section>
       <h2>Dictionary <a>UDPOptions</a></h2>
       <p>
-        States the options for the UDPSocket. An instance of this dictionary can optionally be used in the constructor of the UDPSocket object, where 
+        States the options for the UDPSocket. An instance of this dictionary can 
+        optionally be used in the constructor of the <a>UDPSocket</a> object, where 
         all fields are optional.
       </p>      
       <dl title="dictionary UDPOptions"
           class="idl">          
           
-        <dt>DOMString? localAddress</dt>
-        <dd>The IPv4/6 address of the interface, e.g. wifi or 3G, that the UDPSocket object is bound to. If the field is omitted or null in the constructor the user agent 
-           binds the socket to the IPv4/6 address of the default local interface. </dd>   
+        <dt>DOMString localAddress</dt>
+        <dd>The IPv4/6 address of the interface, e.g. wifi or 3G, that the 
+            UDPSocket object is bound to. If the field is omitted the user agent 
+            binds the socket to the IPv4/6 address of the default local interface. </dd>   
         
-        <dt>unsigned short? localPort</dt>
-        <dd>The local port that the UDPSocket object is bound to. If the the field is omitted or null in the constructor the user agent binds 
-            the socket to an random local port number.</dd>             
+        <dt>unsigned short localPort</dt>
+        <dd>The local port that the UDPSocket object is bound to. If the the field 
+            is omitted the user agent binds the socket to a random local port number.</dd>             
 
-        <dt>DOMString? remoteAddress</dt>
-        <dd>The default remote IPv4/6 address that is used for subsequent send() calls. Default is null.</dd>   
+        <dt>DOMString remoteAddress</dt>
+        <dd>When present the default remote IPv4/6 address that is used for 
+            subsequent send() calls.</dd>   
         
-        <dt>DOMString? remotePort</dt>
-        <dd>The default remote port that is used for subsequent send() calls. Default is null.</dd>   
+        <dt>unsigned short remotePort</dt>
+        <dd>When present the default remote port that is used for subsequent 
+            send() calls.</dd>   
                           
-        <dt>boolean? addressReuse</dt>
-        <dd>True allows the socket to be bound to an address that is already in use. Default is True.</dd>
+        <dt>boolean addressReuse</dt>
+        <dd>True allows the socket to be bound to an address that is already in use. 
+            Default is True.</dd>
             
-        <dt>boolean? loopback</dt>
-        <dd>True means that data you send is looped back to your host. Default is False.</dd>     
+        <dt>boolean loopback</dt>
+        <dd>True means that data you send is looped back to your host. 
+            Default is False.</dd>     
    
       </dl>   
       
@@ -1111,40 +1055,30 @@
     <section>
       <h2>Dictionary <a>TCPOptions</a></h2>
       <p>
-        States the options for the TCPSocket. An instance of this dictionary is used in the constructor of the TCPSocket object, where 
-        the <code>remoteAddress</code> and <code>remotePort</code> fields are required, all other fields are optional.    
+        States the options for the TCPSocket. An instance of this dictionary can 
+        optionally be used in the constructor of the <a>TCPSocket</a> object, where 
+        all fields are optional.   
       </p>      
       <dl title="dictionary TCPOptions"
-          class="idl">
-          
-        <dt>DOMString remoteAddress</dt>
-        <dd>The IPv4/6 address to the remote peer.</dd>   
+          class="idl">     
         
-        <dt>DOMString remotePort</dt>
-        <dd>The port of the remote peer.</dd>      
+        <dt>DOMString localAddress</dt>
+        <dd>The IPv4/6 address of the interface, e.g. wifi or 3G, that the 
+            UDPSocket object is bound to. If the field is omitted the user agent 
+            binds the socket to the IPv4/6 address of the default local interface. </dd>  
         
-        <dt>DOMString? localAddress</dt>
-        <dd>The IPv4/6 address of the interface, e.g. wifi or 3G, that the TCPSocket object is bound to. If the field is omitted or null in the constructor the user agent 
-           binds the socket to the IPv4/6 address of the default local interface. </dd> 
-        
-        <dt>unsigned short? localPort</dt>
-        <dd>The local port that the TCPSocket object is bound to. If the the field is omitted or null in the constructor the user agent binds 
-            the socket to an random local port number.</dd>                 
-          
-        <dt>boolean? addressReuse</dt>
-        <dd>True allows the socket to be bound to an address that is already in use. Default is True.</dd>
-
-        <dt>boolean? useSecureTransport</dt>
+        <dt>unsigned short localPort</dt>
+        <dd>The local port that the UDPSocket object is bound to. If the the field 
+            is omitted the user agent binds the socket to a random local port number.</dd>    
+            
+        <dt>boolean useSecureTransport</dt>
         <dd>True if socket uses SSL or TLS. Default is false.</dd>
         
       </dl>       
       
       <p class="issue">
         Not sure if applications need to be able to bind the TCP Socket to local address/port?                
-      </p>        
-      <p class="issue">
-        Not sure if we need addressReuse for TCP Sockets?            
-      </p>          
+      </p>            
       <p class="issue">
         Use of secure transport needs more investigation                 
       </p>                     
@@ -1159,18 +1093,15 @@
       <dl title="dictionary TCPServerOptions"
           class="idl">
           
-        <dt>DOMString? localAddress</dt>
-        <dd>The IPv4/6 address of the interface, e.g. wifi or 3G, that the TCPServerSocket object is bound to. If the field is omitted or null in the constructor the user agent 
+        <dt>DOMString localAddress</dt>
+        <dd>The IPv4/6 address of the interface, e.g. wifi or 3G, that the TCPServerSocket object is bound to. If the field is omitted the user agent 
            binds the server socket to the IPv4/6 address of the default local interface. </dd> 
                      
-        <dt>unsigned short? localPort</dt>
-        <dd>The local port that the TCPServerSocket object is bound to. If the the field is omitted or null in the constructor the user agent binds 
+        <dt>unsigned short localPort</dt>
+        <dd>The local port that the TCPServerSocket object is bound to. If the the field is omitted the user agent binds 
             the socket to an random local port number.</dd>      
-              
-        <dt>boolean? addressReuse</dt>
-        <dd>True allows the server socket to be bound to an address that is already in use. Default is True. </dd>  
         
-        <dt>boolean? useSecureTransport</dt>
+        <dt>boolean useSecureTransport</dt>
         <dd>True if socket uses SSL or TLS. Default is false.</dd>            
       </dl>        
       
