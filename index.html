@@ -145,6 +145,13 @@ Style guide to contributors:
          event handler</a></dfn> and <dfn><a href="http://dev.w3.org/html5/spec/webappapis.html#event-handler-event-type"> 
          event handler event types</a></dfn> are defined in [[!HTML5]].
       </p>
+      
+      <p>The <a href="http://dev.w3.org/html5/spec/webappapis.html#task-source">task source</a> 
+         for all <span title="concept-task">tasks</span> 
+         <span title="queue a task">queued</span> in this specification is the 
+         <a href="http://www.w3.org/TR/websockets/#websocket-task-source">WebSocket task source</a>.
+      </p>     
+      
     </section>
 
 <!------------------------ Security and privacy ------------------------------>
@@ -167,52 +174,50 @@ Style guide to contributors:
         // This example shows a simple implementation of UPnP-SSDP M-SEARCH discovery 
         // using a multicast UDPSocket 
         //
-        
         // Build an SSDP M-SEARCH multicast message
         var MSearch = "M-SEARCH * HTTP/1.1\r\n" +
-        "ST: " + ServiceType + "\r\n" +
-        "MAN: \"ssdp:discover\"\r\n" +
-        "HOST: 239.255.255.250:1900\r\n" +
-        "MX: 10\r\n\r\n";      
-        
+            "ST: " + ServiceType + "\r\n" +
+            "MAN: \"ssdp:discover\"\r\n" +
+            "HOST: 239.255.255.250:1900\r\n" +
+            "MX: 10\r\n\r\n";
+
         var SSDPMulticastAddress = "239.255.255.250";
-        var SSDPMulticastPort = 1900;          
-        
+        var SSDPMulticastPort = 1900;
+
         // Create a UDP socket
-        var mySocket = new UDPSocket ();        
+        var mySocket = new UDPSocket();
 
         // UDP Socket has been created successfully       
         mySocket.onopen = function () {
 
-          try {        
-            // Join multicast group
-            mySocket.joinMulticastGroup (SSDPMulticastAddress);          
+            try {
+                // Join multicast group
+                mySocket.joinMulticastGroup(SSDPMulticastAddress);
 
-            // Send SSDP M-SEARCH multicast message
-            var moreBufferingOK = mySocket.send(MSearch, SSDPMulticastAddress, 
-                                                SSDPMulticastPort);
-            console.log('M-SEARCH Sent!'); 
-          }        
-          catch(err) {  
-            // Sending failed      
-            console.error('Sending M-SEARCH failed: ' + err.name);
-          }       
-          
-          // Receive M-SEARCH responses          
-          mysocket.onmessage = function (udpMessageEvent) { 
-            // Convert received data from ArrayBuffer to string
-            var data = arrayBufferToString (udpMessageEvent.data);    
-            console.log("Remote address: " + udpMessageEvent.remoteAddress + 
-                        " Remote port: " + udpMessageEvent.remotePort +  
-                        " Received data" + data);
-          };  
-        
-        }; 
-        
+                // Send SSDP M-SEARCH multicast message
+                var moreBufferingOK = mySocket.send(MSearch, SSDPMulticastAddress,
+                    SSDPMulticastPort);
+                console.log('M-SEARCH Sent!');
+            } catch (err) {
+                // Sending failed      
+                console.error('Sending M-SEARCH failed: ' + err.name);
+            }
+
+            // Receive M-SEARCH responses          
+            mysocket.onmessage = function (udpMessageEvent) {
+                // Convert received data from ArrayBuffer to string
+                var data = arrayBufferToString(udpMessageEvent.data);
+                console.log("Remote address: " + udpMessageEvent.remoteAddress +
+                    " Remote port: " + udpMessageEvent.remotePort +
+                    " Received data" + data);
+            };
+
+        };
+
         // Handle errors
-        mySocket.onerror = function(err) {
-          console.error('Error: ' + err.name);
-        };                
+        mySocket.onerror = function (err) {
+            console.error('Error: ' + err.name);
+        };            
         
       </pre>
       
@@ -221,35 +226,36 @@ Style guide to contributors:
         // This example shows a a simple implementation of reception of UPnP-SSDP 
         // NOTIFY multicast messages 
         //
-        
         var SSDPMulticastAddress = "239.255.255.250";
-        var SSDPMulticastPort = 1900;           
-        
+        var SSDPMulticastPort = 1900;
+
         // Create a UDP socket and bind it to the IP-address of the default 
         // local interface and to the SSDP local port
-        var mySocket = new UDPSocket ({"localPort":SSDPMulticastPort});   
-        
-        // UDP Socket has been created successfully       
+        var mySocket = new UDPSocket({
+            "localPort": SSDPMulticastPort
+        });
+
+         // UDP Socket has been created successfully       
         mySocket.onopen = function () {
 
-          // Join multicast group
-          mySocket.joinMulticastGroup (SSDPMulticastAddress);         
-          
-          // Receive SSDP NOTFIY         
-          mysocket.onmessage = function (UDPMessageEvent) { 
-            // Convert received data from ArrayBuffer to string
-            var data = arrayBufferToString (UDPMessageEvent.data);    
-            console.log("Remote address: " + UDPMessageEvent.remoteAddress + 
-                        " Remote port: " + UDPMessageEvent.remotePort +  
-                        " Received data" + data);
-          };  
-        
-        };        
-        
+            // Join multicast group
+            mySocket.joinMulticastGroup(SSDPMulticastAddress);
+
+            // Receive SSDP NOTFIY         
+            mysocket.onmessage = function (UDPMessageEvent) {
+                // Convert received data from ArrayBuffer to string
+                var data = arrayBufferToString(UDPMessageEvent.data);
+                console.log("Remote address: " + UDPMessageEvent.remoteAddress +
+                            " Remote port: " + UDPMessageEvent.remotePort +
+                            " Received data" + data);
+            };
+
+        };
+
         // Handle errors
-        mySocket.onerror = function(err) {
-          console.error('Error: ' + err.name);
-        };           
+        mySocket.onerror = function (err) {
+            console.error('Error: ' + err.name);
+        };     
         
       </pre>      
       
@@ -292,32 +298,34 @@ Style guide to contributors:
         <dd>This attribute contains the number of bytes which have previously been 
             buffered by calls to the send methods of this socket.</dd>                
         
-        <dt>readonly attribute ReadyState readyState;</dt>
+        <dt>readonly attribute ReadyState readyState</dt>
         <dd>The state of the UDP Socket object. A UDP Socket object can be in "open" 
-            "opening" or "closed" states. </dd> 
+            "opening" or "closed" states. See enum <a>ReadyState</a> for details. </dd> 
             
         <dt>attribute EventHandler onopen</dt>
-        <dd>The onopen event handler is called when the socket is open and ready 
-            to use to send and received data. If the creation of the socket
-            fails onerror will be called instead.</dd>                 
+        <dd>Event handler that corresponds to the <code>open</code> event, which 
+            is fired when the socket is open and ready to use to send and receive 
+            data. If the creation of the socket fails the <code>error</code> event 
+            will be fired instead.</dd>                 
 
         <dt>attribute EventHandler ondrain</dt>
-        <dd>The ondrain event handler will be called upon detection that 
-            previously-buffered data has been written to the network and 
-            it is possible to buffer more data received from the application. </dd>   
+        <dd>Event handler that corresponds to the <code>drain</code> event, which 
+            is fired upon detection that previously-buffered data has been written 
+            to the network and it is possible to buffer more data received from 
+            the application. </dd>   
         
         <dt>attribute EventHandler onerror</dt>
-        <dd>The onerror event handler will be called when there is an error. 
-            The data attribute of the event passed to the onerror handler will have a 
-            description of the kind of error.</dd>          
+        <dd>Event handler that corresponds to the <code>error</code> event, which 
+            is fired when there is an error. The error attribute of the event passed 
+            to the onerror handler will have a description of the kind of error.</dd>          
 
         <dt>attribute EventHandler onmessage</dt>
-        <dd>Event handler for received UDP data. The onmessage handler will be called 
-            repeatedly and asynchronously after the UDPSocket object has been created, 
-            every time a UDP datagram has been received and was read. At any time, the 
-            client may choose to pause reading and receiving onmessage callbacks, 
-            by calling the socket's suspend() method. Further invocations of onmessage 
-            will be paused until resume() is called.</dd>  
+        <dd>Event handler that corresponds to the <code>message</code> event, which 
+            is fired repeatedly and asynchronously after the UDPSocket object has been 
+            created, every time a UDP datagram has been received and was read. At 
+            any time, the client may choose to pause reading and receiving onmessage 
+            callbacks, by calling the socket's suspend() method. Further invocations 
+            of onmessage will be paused until resume() is called.</dd>  
         
         <dt> void close()</dt>
         <dd>        
@@ -413,34 +421,37 @@ Style guide to contributors:
       <p>When the <a>UDPSocket</a> constructor is invoked, the User Agent 
          MUST run the following steps:        
         <ol>
-         <li>If the <code>options.localAddress</code> field is absent then 
-             bind the socket to the IPv4/6 address of the default local interface. 
+         <li>If the <code>options</code> argument's <code>localAddress</code> 
+             member is absent then bind the socket to the IPv4/6 address of the 
+             default local interface. 
              Otherwise, bind the socket to the IPv4/6 address of the requested 
              local interface. Set the <code>localAddress</code> attribute to 
              the local address that the socket is bound to.
-         <li>If the <code>options.localPort</code> field is absent then bind 
-             the socket to any available local port. Otherwise, bind the socket 
-             to the requested local port. Set the <code>localPort</code> attribute 
-             to the local port that the socket is bound to.             
+         <li>If the <code>options</code> argument's <code>localPort</code> member 
+             is absent then bind the socket to any available randomly selected 
+             local port. Otherwise, bind the socket to the requested local port. 
+             Set the <code>localPort</code> attribute to the local port that the 
+             socket is bound to.             
          <li>If the requested local address/port pair is already in use by this 
-             application and the <code>options.addressReuse</code> field is 
-             present and set to <code>false</code> then throw DOMException 
-             <code>InvalidAccessError</code> and abort these steps. 
+             application and the <code>options</code> argument's 
+             <code>addressReuse</code> member is present and set to <code>false</code> 
+             then throw DOMException <code>InvalidAccessError</code> and abort 
+             these steps. 
              Else set the <code>addressReuse</code> attribute to the value of 
-             <code>options.addressReuse</code> field if it is present or to
-             <code>true</code> if the <code>options.addressReuse</code> field is 
-             not present.             
-         <li>If the <code>options.remoteAddress</code> field is present then 
-             set the <code>remoteAddress</code> attribute (default remote address)
-             of the socket to the requested address. Else set this atribute to
-             <code>null</code>. 
-         <li>If the <code>options.remotePort</code> field is present then set 
-             the <code>remotePort</code> attribute (default remote port) 
-             to the requested port. Else set this attribute to
+             <code>options</code> argument's <code>addressReuse</code> member if 
+             it is present or to <code>true</code> if the <code>options</code> 
+             argument's <code>addressReuse</code> member is not present.             
+         <li>If the <code>options</code> argument's <code>remoteAddress</code> 
+             member is present then set the <code>remoteAddress</code> attribute 
+             (default remote address) of the socket to the requested address. 
+             Else set this attribute to <code>null</code>. 
+         <li>If the <code>options</code> argument's <code>remotePort</code> member 
+             is present then set the <code>remotePort</code> attribute (default 
+             remote port) to the requested port. Else set this attribute to
              <code>null</code>.          
-         <li>If the <code>options.loopback</code> field is present then set 
-             the <code>loopback</code> attribute to the value of this field.
-             Else set this attribute to <code>false</code>.   
+         <li>If the <code>options</code> argument's <code>loopback</code> member 
+             is present then set the <code>loopback</code> attribute to the value 
+             of this field. Else set this attribute to <code>false</code>.   
          <li>Set the <code>readyState</code> attribute to "opening".  
          <li>Set the <code>bufferedAmount</code> attribute to 0.                
          <li>Return the newly created <code>UDPSocket</code> object to the 
@@ -457,24 +468,31 @@ Style guide to contributors:
              <code>DOMString</code>, <code>Blob</code>, <code>ArraYBuffer</code> 
              or <code>ArrayBufferView</code>, then throw DOMException 
              <code>InvalidAccessError</code> and abort these steps.
-         <li>If no default remote address and port was specified in the 
-             UDPSocket's constructor <code>options.remoteAddress</code> 
-             and <code>options.remotePort</code> fields and the 
-             <dfn><code>send</code></dfn> method arguments 
-             <code>remoteAddress</code> and <code>remotePort</code> are not 
-             present or null then throw DOMException <code>InvalidAccessError</code> 
+         <li>If no default remote address was specified in the 
+             UDPSocket's constructor <code>options</code> argument's 
+             <code>remoteAddress</code> member and the <dfn><code>send</code></dfn> 
+             method argument <code>remoteAddress</code> is not present or null 
+             then throw DOMException <code>InvalidAccessError</code> 
              and abort these steps.
+         <li>If no default remote port was specified in the UDPSocket's constructor 
+             <code>options</code> argument's <code>remotePort</code> member 
+             and the <dfn><code>send</code></dfn> method argument 
+             <code>remotePort</code> is not present or null then throw DOMException 
+             <code>InvalidAccessError</code> and abort these steps.             
          <li>If the data cannot be sent, e.g. because it would need to be 
              buffered but the buffer is full or because the data is too long 
              to pass atomically through the underlying protocol, the user agent 
              MUST:
              <ol>
-               <li>Create a new instance of <a>ErrorEvent</a>. 
+               <li>Create a new instance of <a>SocketErrorEvent</a>. 
                <li>Set the <code>error.name</code> attribute of the 
-               <a>ErrorEvent</a> object to "NetworkError".  
+                   <a>SocketErrorEvent</a> object to "NetworkError".  
+               <li>Set the <code>error.message</code> attribute of the 
+                   <a>SocketErrorEvent</a> object to an informative message 
+                   stating the reason for the failed sending attempt.                   
                <li><a>queue a task</a> to <a>fire an event</a> named 
                    <code><a>error</a></code> with the newly created 
-                   <code>ErrorEvent</code> instance at the <a>UDPSocket</a> object.   
+                   <code>SocketErrorEvent</code> instance at the <a>UDPSocket</a> object.   
                <li>Close the UDP socket and set the <code>readyState</code> 
                    attribute to "closed".  
                <li>Abort these steps.            
@@ -484,8 +502,8 @@ Style guide to contributors:
              method arguments <code>remoteAddress</code> and <code>remotePort</code> 
              are present use these as destination, else use the default address and 
              port of the recipient as stated by the UDPSocket object constructor's 
-             <code>options.remoteAddress</code> and <code>options.remotePort</code> 
-             fields.              
+             <code>options</code> argument's <code>remoteAddress</code> and 
+             <code>remotePort</code> members.              
          <li>When the request has been completed set the return value of the method 
              to <code>true</code> or <code>false</code> as a hint to the caller 
              that they may either continue sending more data immediately, or should 
@@ -537,41 +555,41 @@ Style guide to contributors:
       </p>      
       
       <p>When the attempt to create a new UDP socket (<code>readyState</code> 
-         is "opening") has failed the <a>user agent</a> MUST run the following steps:
+         is "opening") has failed the <a>user agent</a> MUST run the following 
+         steps:
       
         <ol>
           <li>Change the <code>readyState</code> attribute's value to "closed".  
-          <li>Create a new instance of <a>ErrorEvent</a>.      
-          <li>Set the <code>error.name</code> attribute of the <a>ErrorEvent</a> 
-              object to "NetworkError".       
+          <li>Create a new instance of <a>SocketErrorEvent</a>.      
+          <li>Set the <code>error.name</code> attribute of the <a>SocketErrorEvent</a> 
+              object to "NetworkError".   
+          <li>Set the <code>error.message</code> attribute of the <a>SocketErrorEvent</a> 
+              object to an informative message stating the reason for the failed 
+              socket creation attempt. Reasons are for example "no network 
+              contact" or "network resource already in use" (when the local 
+              address/port pair already is in use by another application).       
           <li><a>queue a task</a> to <a>fire an event</a> named 
-              <code><a>error</a></code> with the newly created <a>ErrorEvent</a> 
+              <code><a>error</a></code> with the newly created <a>SocketErrorEvent</a> 
               instance at the <a>UDPSocket</a> object.
-        </ol>
-        
-        <p class="issue">
-          The DOM4 error name that seems most applicable in this siutaion is 
-          "NetworkError". However, I guess that we would like to separate 
-          "no network contact" from "local address/port pair already in use by 
-          another application".  
-          Should we request additional DOM4 error names, for example 
-          "ResourceOccupied"?            
-        </p>           
+        </ol>       
         
       </p>                   
       
-      <p>Upon a new UDP datagram being received, the <a>user agent</a> MUST run 
-         the following steps:
+      <p>Upon a new UDP datagram being received, the <a>user agent</a> MUST 
+         run the following steps:
       
         <ol>
           <li>If it is not possible to convert the received UDP data to 
               <code>ArrayBuffer</code>, [[!TYPED-ARRAYS]], then:   
             <ol>
-              <li>Create a new instance of <a>ErrorEvent</a>. 
-              <li>Set the <code>error.name</code> attribute of the <a>ErrorEvent</a> 
+              <li>Create a new instance of <a>SocketErrorEvent</a>. 
+              <li>Set the <code>error.name</code> attribute of the <a>SocketErrorEvent</a> 
                   object to "NetworkError".  
+              <li>Set the <code>error.message</code> attribute of the 
+                  <a>SocketErrorEvent</a> object to an informative message 
+                  stating the reason for the error.                     
               <li><a>queue a task</a> to <a>fire an event</a> named <code><a>error</a></code> 
-                   with the newly created <code>ErrorEvent</code> instance at the 
+                   with the newly created <code>SocketErrorEvent</code> instance at the 
                    <a>UDPSocket</a> object.    
               <li>Abort these steps.            
             </ol>          
@@ -611,7 +629,7 @@ Style guide to contributors:
           <thead>
             <tr>
               <th>event handler</th>
-              <th>event name</th>
+              <th>event handler event type</th>
             </tr>
           </thead>
           <tbody>          
@@ -634,10 +652,10 @@ Style guide to contributors:
           </tbody>                    
         </table>
 
-        <p>The <code>message</code> <a>event</a> SHALL implement the 
+        <p>The <code>message</code> event MUST implement the 
            <a>UDPMessageEvent</a> interface. </p>  
-        <p>The <code>error</code> <a>event</a> SHALL implement the 
-           <a>ErrorEvent</a> interface. </p>                  
+        <p>The <code>error</code> event MUST implement the 
+           <a>SocketErrorEvent</a> interface. </p>                  
 
       </section>
           
@@ -651,55 +669,54 @@ Style guide to contributors:
       
       <pre class="example highlight">
        // 
-        // This example shows a simple TCP echo client. 
-        // The client will send "Hello World" to the server on port 6789 and log 
-        // what has been received from the server.
-        //        
-        try {
-        
-          //  Create a new TCP client socket and connect to remote host
-          var mySocket = new TCPSocket ("127.0.0.1", 6789);  
-          
-          // TCP socket has successfully been created
-          mySocket.onopen = function() {                    
-            try {
-              // Send data to server
-              var moreBufferingOK = mySocket.send("Hello World");
-              console.log('Data sent to server!'); 
-              
-              // Receive response from server
-              mySocket.onmessage = function (messageEvent) {
-                // Convert received data from ArrayBuffer to string
-                var data = arrayBufferToString (messageEvent.data);  
-                console.log('Data received from server: ' + data);
-                
-                // Close the connection
-                mySocket.close();                               
-              };
-              
-            };        
-            catch(err) {  
-              // Handle exceptions      
-              console.error('Exception: ' + err.name);
-            }                     
-          }  
-          
-          // Connection has been closed 
-          mySocket.onclose = function {
-            console.log('Connection has been closed');
-          };  
-          
-          // Handle errors
-          mySocket.onerror = function(err) {
-            console.error('Error: ' + err.name);
-          };             
-          
-        }        
-          catch(err) {  
-          
-          // Handle runtime exception    
-          console.error('Could not create a TCP socket: ' + err.name);
-        }     
+       // This example shows a simple TCP echo client. 
+       // The client will send "Hello World" to the server on port 6789 and log 
+       // what has been received from the server.
+       //        
+       try {
+
+           //  Create a new TCP client socket and connect to remote host
+           var mySocket = new TCPSocket("127.0.0.1", 6789);
+
+           // TCP socket has successfully been created
+           mySocket.onopen = function () {
+               try {
+                   // Send data to server
+                   var moreBufferingOK = mySocket.send("Hello World");
+                   console.log('Data sent to server!');
+
+                   // Receive response from server
+                   mySocket.onmessage = function (messageEvent) {
+                       // Convert received data from ArrayBuffer to string
+                       var data = arrayBufferToString(messageEvent.data);
+                       console.log('Data received from server: ' + data);
+
+                       // Close the connection
+                       mySocket.close();
+                   };
+
+               };
+               catch (err) {
+                   // Handle exceptions      
+                   console.error('Exception: ' + err.name);
+               }
+           }
+
+           // Connection has been closed 
+           mySocket.onclose = function {
+               console.log('Connection has been closed');
+           };
+
+           // Handle errors
+           mySocket.onerror = function (err) {
+               console.error('Error: ' + err.name);
+           };
+
+       } catch (err) {
+
+           // Handle runtime exception    
+           console.error('Could not create a TCP socket: ' + err.name);
+       } 
         
       </pre>      
       
@@ -729,51 +746,59 @@ Style guide to contributors:
             user agent binds the socket to a random local port number. </dd>  
             
         <dt>readonly attribute boolean addressReuse</dt>
-        <dd><code>true</code> allows the socket to be bound to a local address/port pair that 
-            already is in use. Can be set by the <code>options</code> argument 
-            in the constructor. Default is <code>true</code>.</dd>                       
+        <dd><code>true</code> allows the socket to be bound to a local address/port 
+            pair that already is in use. Can be set by the <code>options</code> 
+            argument in the constructor. Default is <code>true</code>.</dd>                       
             
         <dt>readonly attribute unsigned long bufferedAmount</dt>
         <dd>This attribute contains the number of bytes which have previously been 
             buffered by calls to the send methods of this socket.</dd>                
         
-        <dt>readonly attribute ReadyState readyState;</dt>
-        <dd>The state of the TCP Socket object. </dd> 
+        <dt>readonly attribute ReadyState readyState</dt>
+        <dd>The state of the TCP Socket object. See enum <a>ReadyState</a> for 
+            details.</dd> 
 
         <dt>attribute EventHandler ondrain</dt>
-        <dd>The ondrain event handler will be called upon detection that 
-            previously-buffered data has been written to the network and 
-            it is possible to buffer more data received from the application, 
+        <dd>Event handler that corresponds to the <code>drain</code> event, which 
+            is fired upon detection that previously-buffered data has been written 
+            to the network and it is possible to buffer more data received from 
+            the application, 
             </dd>   
          
         <dt>attribute EventHandler onopen</dt>
-        <dd>The onopen event handler is called when the socket is open and the 
-            connection to the server has been established. If the creation of 
-            the socket fails and/or the connection is refused, onerror will be 
-            called instead.</dd>       
+        <dd>Event handler that corresponds to the <code>open</code> event, which 
+            is fired when the socket is open and the connection to the server has 
+            been established. If the creation of the socket fails and/or the 
+            connection is refused, the <code>error</code> event will be fired 
+            instead.</dd>       
             
         <dt>attribute EventHandler onclose</dt>
-        <dd>The onclose event handler is called when the connection to the server 
-            has been closed, either cleanly by the server, or cleanly by the 
-            client calling close(), or if the connection was lost. If the 
-            connection was lost, onerror will be called prior to onclose.</dd>      
+        <dd>Event handler that corresponds to the <code>close</code> event, which 
+            is fired when the connection to the server has been closed, either
+            cleanly by the server, or cleanly by the client calling close(), 
+            or if the connection was lost. If the connection was lost, the 
+            <code>error</code> event will be fired prior to the <code>close</code>
+            event.</dd>      
             
         <dt>attribute EventHandler onhalfclose</dt>
-        <dd>The onhalfclose event handler is called when the remote peer has 
-            half closed the connection. This means that the remote peer can 
-            receive TCP messages but not send.</dd>                                    
+        <dd>Event handler that corresponds to the <code>halfclose</code> event, 
+            which is fired when the remote peer has half closed the connection. 
+            This means that the remote peer can receive TCP messages but not 
+            send.</dd>                                    
             
         <dt>attribute EventHandler onerror</dt>
-        <dd>The onerror handler will be called when there is an error. The data 
-            attribute of the event passed to the onerror handler will have a 
-            description of the kind of error. If onerror is called before onopen, 
+        <dd>Event handler that corresponds to the <code>error</code> event, which 
+            is fired when there is an error. The error attribute of the event 
+            passed to the onerror handler will have a description of the kind of 
+            error. If <code>error</code> is fired before <code>open</code>, 
             the error was socket creation error or connection refused, and 
-            onclose will not be called. If onerror is called after onopen, the 
-            connection was lost, and onclose will be called after onerror.</dd>              
+            the <code>close</code> event will not be fired. If <code>error</code> 
+            is fired after <code>open</code>, the connection was lost, and 
+            <code>close</code> will be fired after <code>error</code>.</dd>              
 
         <dt>attribute EventHandler onmessage</dt>
-        <dd>Event handler for received TCP data. The onmessage handler will be 
-            called repeatedly and asynchronously after the TCPSocket object 
+        <dd>Event handler that corresponds to the <code>message</code> event, 
+            which is fired repeatedly and asynchronously after the TCPSocket object 
             has been created, every time TCP data has been received and was 
             read. At any time, the client may choose to pause reading and 
             receiving onmessage callbacks, by calling the socket's suspend() 
@@ -794,8 +819,8 @@ Style guide to contributors:
 
         <dt> void suspend()</dt>
         <dd>        
-          <p>Pause reading incoming TCP data and invocations of the <code>onmessage</code> 
-          handler until resume is called.</p>        
+          <p>Pause reading incoming TCP data and invocations of the 
+          <code>onmessage</code> handler until resume is called.</p>        
         </dd>    
         
         <dt> void resume()</dt>
@@ -835,28 +860,29 @@ Style guide to contributors:
         <ol>
          <li>If the <code>remoteAddress</code> argument is not a valid IPv4/6 
              address and/or the <code>remotePort</code> argument is not a valid 
-             port number then throw DOMException <code>InvalidAccessError</code> exception 
-             and abort these steps, else set the <code>remoteAddress</code> and 
-             <code>remotePort</code> attributes to the requested values.
-         <li>If the <code>options.localAddress</code> field is absent then 
-             bind the socket to the IPv4/6 address of the default local interface. 
+             port number then throw DOMException <code>InvalidAccessError</code> 
+             exception and abort these steps, else set the <code>remoteAddress</code> 
+             and <code>remotePort</code> attributes to the requested values.
+         <li>If the <code>options</code> argument's <code>localAddress</code> member 
+             is absent then bind the socket to the IPv4/6 address of the default 
+             local interface. 
              Otherwise, bind the socket to the IPv4/6 address of the requested 
              local interface. Set the <code>localAddress</code> attribute to 
              the local address that the socket is bound to.
-         <li>If the <code>options.localPort</code> field is absent then bind 
-             the socket to any available local port. Otherwise, bind the socket 
-             to the requested local port. Set the <code>localPort</code> attribute 
-             to the local port that the socket is bound to.             
+         <li>If the <code>options</code> argument's <code>localPort</code> member 
+             is absent then bind the socket to any randomly selected available 
+             local port. Otherwise, bind the socket to the requested local port. 
+             Set the <code>localPort</code> attribute to the local port that the 
+             socket is bound to.             
          <li>If the requested local address/port pair is already in use by this 
-             application and the <code>options.addressReuse</code> field is 
-             present and set to <code>false</code> then throw DOMException 
-             <code>InvalidAccessError</code> and abort these steps. 
+             application and the <code>options</code> argument's 
+             <code>addressReuse</code> member is present and set to <code>false</code> 
+             then throw DOMException <code>InvalidAccessError</code> and abort 
+             these steps. 
              Else set the <code>addressReuse</code> attribute to the value of 
-             <code>options.addressReuse</code> field if it is present or to
-             <code>true</code> if the <code>options.addressReuse</code> field is 
-             not present. 
-         <li>Set the <code>localAddress</code> and <code>localPort</code> 
-             attributes to the selected values according to above.  
+             <code>options</code> argument's <code>addressReuse</code> member if 
+             it is present or to <code>true</code> if the <code>options</code> 
+             argument's <code>addressReuse</code> member is not present. 
          <li>Set the <code>readyState</code> attribute to "opening".    
          <li>Set the <code>bufferedAmount</code> attribute to 0.             
          <li>Attempt to connect to the requested address and port in the 
@@ -881,12 +907,15 @@ Style guide to contributors:
              <ol>
                <li>Change the <code>readyState</code> attribute's value to 
                    "closed".   
-               <li>Create a new instance of <a>ErrorEvent</a>.     
+               <li>Create a new instance of <a>SocketErrorEvent</a>.     
                <li>Set the <code>error.name</code> attribute of the 
-                   <a>ErrorEvent</a> object to "NetworkError".            
+                   <a>SocketErrorEvent</a> object to "NetworkError".    
+              <li>Set the <code>error.message</code> attribute of the 
+                  <a>SocketErrorEvent</a> object to an informative message 
+                  stating the reason for the error.                           
                <li><a>queue a task</a> to <a>fire an event</a> named 
                    <code><a>error</a></code> with the newly created 
-                   <code>ErrorEvent</code> instance at the <a>TCPSocket</a> 
+                   <code>SocketErrorEvent</code> instance at the <a>TCPSocket</a> 
                    object.    
                <li><a>queue a task</a> to <a>fire an event</a> named 
                    <code><a>close</a></code> at the <a>TCPSocket</a> object.      
@@ -896,7 +925,7 @@ Style guide to contributors:
              the <code>data</code> parameter to the address and port of the 
              recipient as stated by the TCPSocket object constructor's 
              <code>remoteAddress</code> and <code>remotePort</code> fields.              
-         <li>When the requests has been completed set the return value of the 
+         <li>When the request has been completed set the return value of the 
              method to <code>true</code> or <code>false</code> as a hint to the 
              caller that they may either continue sending more data immediately, 
              or should want to wait until the transport layer has transmitted 
@@ -966,21 +995,19 @@ Style guide to contributors:
       
         <ol>
           <li>Change the <code>readyState</code> attribute's value to "closed".  
-          <li>Create a new instance of <a>ErrorEvent</a>.      
-          <li>Set the <code>error.name</code> attribute of the <a>ErrorEvent</a> 
-              object to "NetworkError".       
+          <li>Create a new instance of <a>SocketErrorEvent</a>.  
+          <li>Set the <code>error.name</code> attribute of the <a>SocketErrorEvent</a> 
+              object to "NetworkError".              
+          <li>Set the <code>error.message</code> attribute of the 
+              <a>SocketErrorEvent</a> object to an informative message 
+              stating the reason for the error. Reasons are for example 
+              "no network contact", "network resource already in use" 
+              (when the local address/port pair already is in use by another 
+              application) or "peer does not respond".       
           <li><a>queue a task</a> to <a>fire an event</a> named 
-              <code><a>error</a></code> with the newly created <a>ErrorEvent</a> 
+              <code><a>error</a></code> with the newly created <a>SocketErrorEvent</a> 
               instance at the <a>TCPSocket</a> object.
-        </ol>
-        <p class="issue">
-          The DOM4 error name that seems most applicable in this siutaion is 
-          "NetworkError". However, I guess that we would like to separate 
-          "no network contact" from "local address/port pair already in use by 
-          another application".  
-          Should we request additional DOM4 error names, for example 
-          "ResourceOccupied"?            
-        </p>         
+        </ol>         
       </p>     
       
       <p>When an established TCP connection (<code>readyState</code> is "open") 
@@ -988,11 +1015,14 @@ Style guide to contributors:
       
         <ol>
           <li>Change the <code>readyState</code> attribute's value to "closed".   
-          <li>Create a new instance of <a>ErrorEvent</a>.     
-          <li>Set the <code>error.name</code> attribute of the <a>ErrorEvent</a> 
-              object to "NetworkError".            
+          <li>Create a new instance of <a>SocketErrorEvent</a>.     
+          <li>Set the <code>error.name</code> attribute of the <a>SocketErrorEvent</a> 
+              object to "NetworkError". 
+          <li>Set the <code>error.message</code> attribute of the 
+              <a>SocketErrorEvent</a> object to an informative message 
+              stating the reason for the error.                         
           <li><a>queue a task</a> to <a>fire an event</a> named <code><a>error</a></code> 
-              with the newly created <code>ErrorEvent</code> instance at the 
+              with the newly created <code>SocketErrorEvent</code> instance at the 
               <a>TCPSocket</a> object.    
           <li><a>queue a task</a> to <a>fire an event</a> named <code><a>close</a></code> 
               at the <a>TCPSocket</a> object.                       
@@ -1006,12 +1036,15 @@ Style guide to contributors:
           <li>If it is not possible to convert the received TCP data to 
               <code>ArrayBuffer</code>, [[!TYPED-ARRAYS]], then:   
             <ol>
-              <li>Create a new instance of <a>ErrorEvent</a>. 
+              <li>Create a new instance of <a>SocketErrorEvent</a>. 
               <li>Set the <code>error.name</code> attribute of the 
-                  <a>ErrorEvent</a> object to "NetworkError".  
+                  <a>SocketErrorEvent</a> object to "NetworkError".  
+              <li>Set the <code>error.message</code> attribute of the 
+                  <a>SocketErrorEvent</a> object to an informative message 
+                  stating the reason for the error.                  
               <li><a>queue a task</a> to <a>fire an event</a> named 
                   <code><a>error</a></code> with the newly created 
-                  <code>ErrorEvent</code> instance 
+                  <code>SocketErrorEvent</code> instance 
                      at the <a>TCPSocket</a> object.    
               <li>Abort these steps.            
             </ol>          
@@ -1061,7 +1094,7 @@ Style guide to contributors:
           <thead>
             <tr>
               <th>event handler</th>
-              <th>event name</th>
+              <th>event handler event type</th>
             </tr>
           </thead>
           <tbody>
@@ -1092,12 +1125,12 @@ Style guide to contributors:
           </tbody>                    
         </table>
 
-        <p>The <code>message</code> <a>event</a> SHALL implement the 
+        <p>The <code>message</code> event MUST implement the 
            <code>MessageEvent</code> interface, [[!POSTMSG]]. The event's data 
            attribute is intialized to a new read-only <code>ArrayBuffer</code> 
            object whose contents are the recieved UDP data. [[!TYPED-ARRAYS]]</p>  
-        <p>The <code>error</code> <a>event</a> SHALL implement the 
-           <a>ErrorEvent</a> interface. </p>                  
+        <p>The <code>error</code> event MUST implement the 
+           <a>SocketErrorEvent</a> interface. </p>                  
 
       </section>
           
@@ -1116,47 +1149,46 @@ Style guide to contributors:
         // has been sent to the server.
         //        
         try {
-          //  Create a new server socket that listens on port 6789
-          var myServerSocket = new TCPServerSocket ({"localPort":6789});
-          
-          // The TCP server Socket has been created successfully       
-          myServerSocket.onopen = function () {
-          
-            myServerSocket.onconnect = function (connectEvent) { 
-              var connectedSocket = connectEvent.connectedSocket;
-              // Read the data
-              connectedSocket.onmessage = function (messageEvent) {
-                 var data = messageEvent.data;               
-                 try {
-                   // Send data back to client
-                   var moreBufferingOK = connectedSocket.send(data);
-                   console.log('Response sent to client!'); 
-                 }        
-                   catch(err) {  
-                   // Sending failed      
-                   console.error('Sending failed: ' + err.name);
-                 }                                                            
-              };  
-              
-              // Connection has been closed 
-              connectedSocket.onclose = function {
-                console.log('Connection has been closed');
-              };        
-            
+            //  Create a new server socket that listens on port 6789
+            var myServerSocket = new TCPServerSocket({
+                "localPort": 6789
+            });
+
+            // The TCP server Socket has been created successfully       
+            myServerSocket.onopen = function () {
+
+                myServerSocket.onconnect = function (connectEvent) {
+                    var connectedSocket = connectEvent.connectedSocket;
+                    // Read the data
+                    connectedSocket.onmessage = function (messageEvent) {
+                        var data = messageEvent.data;
+                        try {
+                            // Send data back to client
+                            var moreBufferingOK = connectedSocket.send(data);
+                            console.log('Response sent to client!');
+                        } catch (err) {
+                            // Sending failed      
+                            console.error('Sending failed: ' + err.name);
+                        }
+                    };
+
+                    // Connection has been closed 
+                    connectedSocket.onclose = function {
+                        console.log('Connection has been closed');
+                    };
+
+                };
+
             };
-          
-          };
-          
-          // Handle errors
-          myServerSocket.onerror = function(err) {
-             console.error('Error: ' + err.name);
-          };             
-        }        
-        catch(err) {  
-          // Handle runtime exception    
-          console.error('Could not create a TCP server socket: ' + err.name);
-        }      
-        
+
+            // Handle errors
+            myServerSocket.onerror = function (err) {
+                console.error('Error: ' + err.name);
+            };
+        } catch (err) {
+            // Handle runtime exception    
+            console.error('Could not create a TCP server socket: ' + err.name);
+        }
       </pre>   
       
       <dl title="[Constructor (optional TCPServerOptions options)] 
@@ -1182,28 +1214,35 @@ Style guide to contributors:
             <code>options</code> argument in the constructor. Default is 
             <code>true</code>.</dd>                    
         
-        <dt>readonly attribute ReadyState readyState;</dt>
+        <dt>readonly attribute ReadyState readyState</dt>
         <dd>The state of the TCP server object. A TCP server socket object can 
-            be in "open", "opening" or "closed" states. </dd>        
+            be in "open", "opening" or "closed" states. See enum <a>ReadyState</a> 
+            for details. </dd>        
             
         <dt>attribute EventHandler onopen</dt>
-        <dd>The onopen event handler is called when the socket is open and ready 
-            to receive connection attempts from clients. If the creation of 
-            the server socket fails onerror will be called instead.</dd>               
+        <dd>Event handler that corresponds to the <code>open</code> event, which 
+            is fired when the socket is open and ready to receive connection 
+            attempts from clients. If the creation of the server socket fails 
+            the <code>error</code> event will be fired instead.</dd>               
 
         <dt>attribute EventHandler onconnect</dt>
-        <dd>Event handler for an accepted incoming connections on the specified 
-            port and address.</dd> 
+        <dd>Event handler that corresponds to the <code>connect</code> event, 
+            which is fired repeatedly and asynchronously after the TCPServerSocket 
+            object has been created, every time an incoming connection attempt 
+            on the specified port and address has been accepted.</dd> 
         
         <dt>attribute EventHandler onerror</dt>
-        <dd>Event handler for errors on the server socket. The data attribute 
-            of the event passed to the onerror handler will have a 
+        <dd>Event handler that corresponds to the <code>error</code> event, which 
+            is fired when there is an error on the server socket. The data 
+            attribute of the event passed to the onerror handler will have a 
             description of the kind of error.</dd>   
             
         <dt>attribute EventHandler onconnecterror</dt>
-        <dd>Event handler for errors on incoming connection attempts. The data 
-            attribute of the event passed to the onerror handler will have a 
-            description of the kind of error.</dd>              
+        <dd>Event handler that corresponds to the <code>connecterror</code> event, 
+            which is fired repeatedly and asynchronously after the TCPServerSocket 
+            object has been created, every time there is an error on an incoming 
+            connection attempt. The data attribute of the event passed to the 
+            onconnecterror handler will have a description of the kind of error.</dd>              
             
         <dt> void close()</dt>
         <dd>        
@@ -1228,23 +1267,26 @@ Style guide to contributors:
       <p>When the <a>TCPServerSocket</a> constructor is invoked, the User Agent 
          MUST run the following steps:        
         <ol>
-         <li>If the <code>options.localAddress</code> field is absent then 
-             bind the socket to the IPv4/6 address of the default local interface. 
+         <li>If the <code>options</code> argument's <code>localAddress</code> 
+             member is absent then bind the socket to the IPv4/6 address of the 
+             default local interface. 
              Otherwise, bind the socket to the IPv4/6 address of the requested 
              local interface. Set the <code>localAddress</code> attribute to 
              the local address that the socket is bound to.
-         <li>If the <code>options.localPort</code> field is absent then bind 
-             the socket to any available local port. Otherwise, bind the socket 
-             to the requested local port. Set the <code>localPort</code> attribute 
-             to the local port that the socket is bound to.             
+         <li>If the <code>options</code> argument's <code>localPort</code> member
+             is absent then bind the socket to any available randomly selected 
+             local port. Otherwise, bind the socket to the requested local port. 
+             Set the <code>localPort</code> attribute to the local port that the 
+             socket is bound to.             
          <li>If the requested local address/port pair is already in use by this 
-             application and the <code>options.addressReuse</code> field is 
+             application and the <code>options</code> argument's 
+             <code>addressReuse</code> member is 
              present and set to <code>false</code> then throw DOMException 
              <code>InvalidAccessError</code> and abort these steps. 
              Else set the <code>addressReuse</code> attribute to the value of 
-             <code>options.addressReuse</code> field if it is present or to
-             <code>true</code> if the <code>options.addressReuse</code> field is 
-             not present.                                             
+             <code>options</code> argument's <code>addressReuse</code> member 
+             if it is present or to <code>true</code> if the <code>options</code> 
+             argument's <code>addressReuse</code> member is not present.                                             
          <li>Set the <code>readyState</code> attribute to "opening".   
          <li>Return the newly created <a>TCPServerSocket</a> object to the 
              application.
@@ -1306,22 +1348,19 @@ Style guide to contributors:
       
         <ol>
           <li>Change the <code>readyState</code> attribute's value to "closed".  
-          <li>Create a new instance of <a>ErrorEvent</a>.      
-          <li>Set the <code>error.name</code> attribute of the <a>ErrorEvent</a> 
-              object to "NetworkError".       
+          <li>Create a new instance of <a>SocketErrorEvent</a>.      
+          <li>Set the <code>error.name</code> attribute of the <a>SocketErrorEvent</a> 
+              object to "NetworkError".     
+          <li>Set the <code>error.message</code> attribute of the 
+              <a>SocketErrorEvent</a> object to an informative message 
+              stating the reason for the error. Reasons are for example 
+              "no network contact" or "network resource already in use" 
+              (when the local address/port pair already is in use by another 
+              application).             
           <li><a>queue a task</a> to <a>fire an event</a> named 
-              <code><a>error</a></code> with the newly created <a>ErrorEvent</a> 
+              <code><a>error</a></code> with the newly created <a>SocketErrorEvent</a> 
               instance at the <a>TCPServerSocket</a> object.
-        </ol>
-        
-        <p class="issue">
-          The DOM4 error name that seems most applicable in this siutaion is 
-          "NetworkError". However, I guess that we would like to separate 
-          "no network contact" from "local address/port pair already in use by 
-          another application".  
-          Should we request additional DOM4 error names, for example 
-          "ResourceOccupied"?            
-        </p>           
+        </ol>          
         
       </p>                
       
@@ -1330,12 +1369,15 @@ Style guide to contributors:
          MUST run the following steps:
       
         <ol>
-          <li>Create a new instance of <a>ErrorEvent</a>.      
-          <li>Set the <code>error.name</code> attribute of the <a>ErrorEvent</a> 
-              object to "NetworkError".       
+          <li>Create a new instance of <a>SocketErrorEvent</a>.      
+          <li>Set the <code>error.name</code> attribute of the <a>SocketErrorEvent</a> 
+              object to "NetworkError".    
+          <li>Set the <code>error.message</code> attribute of the 
+              <a>SocketErrorEvent</a> object to an informative message 
+              stating the reason for the error.                 
           <li><a>queue a task</a> to <a>fire an event</a> named 
               <code><a>connecterror</a></code> with the newly created
-              <a>ErrorEvent</a> instance at the <a>TCPServerSocket</a> object.
+              <a>SocketErrorEvent</a> instance at the <a>TCPServerSocket</a> object.
         </ol>
       </p>        
 
@@ -1349,7 +1391,7 @@ Style guide to contributors:
           <thead>
             <tr>
               <th>event handler</th>
-              <th>event name</th>
+              <th>event handler event type</th>
             </tr>
           </thead>
           <tbody>
@@ -1372,10 +1414,10 @@ Style guide to contributors:
           </tbody>
         </table>
 
-        <p>The <code>connect</code> <a>event</a> SHALL implement the 
+        <p>The <code>connect</code> event MUST implement the 
            <a>ConnectEvent</a> interface. </p>  
-        <p>The <code>error</code> <a>event</a> and the <code>connecterror</code> 
-           <a>event</a>SHALL implement the <a>ErrorEvent</a> interface. </p>                
+        <p>The <code>error</code> event and the <code>connecterror</code> 
+           event MUST implement the <a>SocketErrorEvent</a> interface. </p>                
 
       </section>
           
@@ -1389,8 +1431,7 @@ Style guide to contributors:
          interface, [[!POSTMSG]]</p>
       <p>The event's data attribute is intialized to a new read-only ArrayBuffer 
          object whose contents are the recieved UDP data, [[!TYPED-ARRAYS]]   
-      <dl title="[NoInterfaceObject]
-                 interface UDPMessageEvent : MessageEvent"
+      <dl title="interface UDPMessageEvent : MessageEvent"
           class="idl">   
         <dt>readonly attribute DOMString remoteAddress</dt>
         <dd>The address of the remote machine.</dd>        
@@ -1404,8 +1445,7 @@ Style guide to contributors:
       <h2>Interface <a>ConnectEvent</a></h2>
       <p>The <a>ConnectEvent</a> interface represents events related to accepted 
          connections to a TCP server socket.</p>
-      <dl title="[NoInterfaceObject]
-                 interface ConnectEvent : Event"
+      <dl title="interface ConnectEvent : Event"
           class="idl">
         <dt>readonly attribute TCPSocket connectedSocket </dt>
         <dd>The new TCP socket object for the accepted socket. This new socket 
@@ -1413,16 +1453,14 @@ Style guide to contributors:
       </dl>
     </section>        
     
-<!------------------------ Interface ErrorEvent ------------------------------>   
+<!------------------------ Interface SocketErrorEvent ------------------------------>   
     <section>
-      <h2>Interface <a>ErrorEvent</a></h2>
-      <p>The <a>ErrorEvent</a> interface represents events related to TCP 
-         connection errors.</p>
-      <dl title="[NoInterfaceObject]
-                 interface ErrorEvent : Event"
+      <h2>Interface <a>SocketErrorEvent</a></h2>
+      <p>The <a>SocketErrorEvent</a> interface represents events stating errors.</p>
+      <dl title="interface SocketErrorEvent : Event"
           class="idl">
         <dt>readonly attribute DOMError error</dt>
-        <dd>The detected error.</dd>        
+        <dd>The detected error. See [[!DOM]].</dd>        
       </dl>
     </section>            
     
@@ -1465,11 +1503,7 @@ Style guide to contributors:
             Default is <code>false</code>.</dd>     
    
       </dl>   
-      
-      <p class="issue">
-        Do we need secure transport for UDP sockets??                 
-      </p>             
-                       
+                  
     </section>        
     
 <!------------------------ Dictionary TCPOptions ------------------------------>   
@@ -1495,19 +1529,16 @@ Style guide to contributors:
             number.</dd>    
             
         <dt>boolean addressReuse</dt>
-        <dd><code>true</code> allows the socket to be bound to a local address/port pair that 
-            already is in use. Default is <code>true</code>.</dd>            
+        <dd><code>true</code> allows the socket to be bound to a local 
+            address/port pair that already is in use. Default is <code>true</code>.
+            </dd>            
             
         <dt>boolean useSecureTransport</dt>
         <dd><code>true</code> if socket uses SSL or TLS. Default is 
             <code>false</code>.</dd>
         
       </dl>       
-      
-      <p class="issue">
-        Not sure if applications need to be able to bind the TCP Socket to local 
-        address/port?                
-      </p>            
+              
       <p class="issue">
         Use of secure transport needs more investigation                 
       </p>                     
@@ -1536,8 +1567,9 @@ Style guide to contributors:
             local port number.</dd>    
             
         <dt>boolean addressReuse</dt>
-        <dd><code>true</code> allows the socket to be bound to a local address/port pair that 
-            already is in use. Default is <code>true</code>.</dd>              
+        <dd><code>true</code> allows the socket to be bound to a local 
+            address/port pair that already is in use. Default is 
+            <code>true</code>.</dd>              
         
         <dt>boolean useSecureTransport</dt>
         <dd><code>true</code> if socket uses SSL or TLS. Default is 
@@ -1559,18 +1591,22 @@ Style guide to contributors:
       
         <dl id='enum-basic' class='idl' title='enum ReadyState'>
           <dt>opening</dt>
-          <dd>The socket is in opening state, i.e. availability of local address/port is being checked, network status is 
-              being checked, etc. For TCP a connection with a remote peer has not yet been established.</dd>
+          <dd>The socket is in opening state, i.e. availability of local address/port 
+              is being checked, network status is being checked, etc. For TCP a 
+              connection with a remote peer has not yet been established.</dd>
           <dt>open</dt>
-          <dd>The socket is ready to use to send and received data. For TCP a connection with a remote peer has been established.</dd>
+          <dd>The socket is ready to use to send and received data. For TCP a 
+              connection with a remote peer has been established.</dd>
           <dt>closing</dt>
-          <dd>Only used for TCP sockets. The TCP connection is going through the closing handshake, or the 
-              close() method has been invoked.</dd>
+          <dd>Only used for TCP sockets. The TCP connection is going through 
+              the closing handshake, or the close() method has been invoked.</dd>
           <dt>closed</dt>
-          <dd>The socket is closed and can not be use to send and received data. For TCP the connection has been closed or could not be opened.</dd>      
+          <dd>The socket is closed and can not be use to send and received data. 
+              For TCP the connection has been closed or could not be opened.</dd>      
           <dt>halfclosed</dt>
-          <dd>Only used for TCP sockets. The TCP connection has been "halfclosed", which means that it is 
-              not possible to send data but it is still possible to received.</dd>                      
+          <dd>Only used for TCP sockets. The TCP connection has been "halfclosed", 
+              which means that it is not possible to send data but it is still 
+              possible to receive.</dd>                      
         </dl>          
       </section>            
             
@@ -1580,7 +1616,11 @@ Style guide to contributors:
     <section class='appendix'>
       <h2>Acknowledgements</h2>
       <p>
-        Many thanks to Robin Berjon for making our lives so much easier with his cool tool.
+        Many thanks to Marcos Caceres, Jonas Sicking, Ke-Fong Lin and 
+        Alexandre Morgaut for reviewing the specification and providing very 
+        valuable feedback. Also thanks to Sony colleagues Anders Edenbrandt,
+        Anders Isberg and Björn Isaksson for sharing their experience on 
+        socket APIs and providing support.
       </p>
     </section>
   </body>
