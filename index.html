@@ -311,7 +311,8 @@ Style guide to contributors:
             argument in the constructor. Default is <code>true</code>.</dd>
             
         <dt>readonly attribute boolean loopback</dt>
-        <dd><code>true</code> means that data you send is looped back to your host.
+        <dd>Only applicable for multicast.<code>true</code> means that data 
+            you send is looped back to your host.           
             Can be set by the <code>options</code> argument in the constructor.  
             Default is <code>false</code>.</dd>               
                                      
@@ -450,8 +451,8 @@ Style guide to contributors:
              local interface and set the <code>localAddress</code> attribute to 
              the local address that the socket is bound to.
          <li>If the <code>options</code> argument's <code>localPort</code> member 
-             is absent then bind the socket to any available randomly selected 
-             local port and set the <code>localPort</code> attribute to null. 
+             is absent then bind the socket to an ephemeral local port decided 
+             by the system and set the <code>localPort</code> attribute to null. 
              Otherwise, bind the socket to the requested local port and set the 
              <code>localPort</code> attribute to the local port that the socket 
              is bound to.             
@@ -722,7 +723,7 @@ Style guide to contributors:
                    console.log('Data sent to server!');
 
                    // Receive response from server
-                   mySocket.onmessage = function (messageEvent) {
+                   mySocket.ondata = function (messageEvent) {
                        // Convert received data from ArrayBuffer to string
                        var data = arrayBufferToString(messageEvent.data);
                        console.log('Data received from server: ' + data);
@@ -785,7 +786,12 @@ Style guide to contributors:
         <dt>readonly attribute boolean addressReuse</dt>
         <dd><code>true</code> allows the socket to be bound to a local address/port 
             pair that already is in use. Can be set by the <code>options</code> 
-            argument in the constructor. Default is <code>true</code>.</dd>                       
+            argument in the constructor. Default is <code>true</code>.</dd> 
+            
+        <dt>readonly attribute boolean noDelay</dt>
+        <dd><code>true</code> if the Nagle algorithm for send coalescing is 
+            disabled. Can be set by the <code>options</code> argument in the 
+            constructor. Default is <code>true</code>.</dd>                                   
             
         <dt>readonly attribute unsigned long bufferedAmount</dt>
         <dd>This attribute contains the number of bytes which have previously been 
@@ -815,13 +821,7 @@ Style guide to contributors:
             cleanly by the server, or cleanly by the client calling close(), 
             or if the connection was lost. If the connection was lost, the 
             <code>error</code> event will be fired prior to the <code>close</code>
-            event.</dd>      
-            
-        <dt>attribute EventHandler onhalfclose</dt>
-        <dd>Event handler that corresponds to the <code>halfclose</code> event, 
-            which is fired when the remote peer has half closed the connection. 
-            This means that the remote peer can receive TCP messages but not 
-            send.</dd>                                    
+            event.</dd>                                    
             
         <dt>attribute EventHandler onerror</dt>
         <dd>Event handler that corresponds to the <code>error</code> event, which 
@@ -833,13 +833,13 @@ Style guide to contributors:
             is fired after <code>open</code>, the connection was lost, and 
             <code>close</code> will be fired after <code>error</code>.</dd>              
 
-        <dt>attribute EventHandler onmessage</dt>
-        <dd>Event handler that corresponds to the <code>message</code> event, 
+        <dt>attribute EventHandler ondata</dt>
+        <dd>Event handler that corresponds to the <code>data</code> event, 
             which is fired repeatedly and asynchronously after the TCPSocket object 
             has been created, every time TCP data has been received and was 
             read. At any time, the client may choose to pause reading and 
-            receiving onmessage callbacks, by calling the socket's suspend() 
-            method. Further invocations of onmessage will be paused until resume() 
+            receiving ondata callbacks, by calling the socket's suspend() 
+            method. Further invocations of ondata will be paused until resume() 
             is called.</dd>  
         
         <dt> void close()</dt>
@@ -857,12 +857,12 @@ Style guide to contributors:
         <dt> void suspend()</dt>
         <dd>        
           <p>Pause reading incoming TCP data and invocations of the 
-          <code>onmessage</code> handler until resume is called.</p>        
+          <code>ondata</code> handler until resume is called.</p>        
         </dd>    
         
         <dt> void resume()</dt>
         <dd>        
-          <p>Resume reading incoming TCP data and invoking <code>onmessage</code> 
+          <p>Resume reading incoming TCP data and invoking <code>ondata</code> 
              as usual.</p>        
         </dd>                            
         
@@ -908,8 +908,8 @@ Style guide to contributors:
              local interface and set the <code>localAddress</code> attribute to 
              the local address that the socket is bound to.
          <li>If the <code>options</code> argument's <code>localPort</code> member 
-             is absent then bind the socket to any randomly selected available 
-             local port and set the <code>localPort</code> attribute to null. 
+             is absent then bind the socket to an ephemeral local port decided 
+             by the system and set the <code>localPort</code> attribute to null. 
              Otherwise, bind the socket to the requested local port and set the 
              <code>localPort</code> attribute to the local port that the 
              socket is bound to.             
@@ -917,6 +917,10 @@ Style guide to contributors:
              <code>options</code> argument's <code>addressReuse</code> member 
              if it is present or to <code>true</code> if the <code>options</code> 
              argument's <code>addressReuse</code> member is not present.
+         <li>Set the <code>noDelay</code> attribute to the value of the
+             <code>options</code> argument's <code>noDelay</code> member 
+             if it is present or to <code>true</code> if the <code>options</code> 
+             argument's <code>noDelay</code> member is not present.             
          <li>Set the <code>readyState</code> attribute to "opening".    
          <li>Set the <code>bufferedAmount</code> attribute to 0.             
          <li>Attempt to connect to the requested address and port in the 
@@ -1066,7 +1070,7 @@ Style guide to contributors:
         </ol>
       </p>            
       
-      <p>Upon a new TCP message being received, the <a>user agent</a> MUST run 
+      <p>Upon new TCP data being received, the <a>user agent</a> MUST run 
          the following steps:
       
         <ol>
@@ -1093,12 +1097,12 @@ Style guide to contributors:
               to a new read-only <code>ArrayBuffer</code> object whose 
               contents are the received TCP data [[!TYPED-ARRAYS]].             
           <li><a>queue a task</a> to <a>fire an event</a> named 
-              <code><a>message</a></code> with the newly created 
+              <code><a>data</a></code> with the newly created 
               <code>MessageEvent</code> instance at the <a>TCPSocket</a> object.
         </ol>
         <p>
           Note: It is up to the implementation the define how often the 
-          <code><a>message</a></code> event will be issued and how much data that 
+          <code><a>data</a></code> event will be issued and how much data that 
           will be delivered to the application with each <a>MessageEvent</a> 
           instance.
         </p>         
@@ -1139,8 +1143,8 @@ Style guide to contributors:
           </thead>
           <tbody>
             <tr>
-              <td><strong><code>onmessage</code></strong></td>
-              <td><code><dfn>message</dfn></code></td>
+              <td><strong><code>ondata</code></strong></td>
+              <td><code><dfn>data</dfn></code></td>
             </tr>                       
             <tr>
               <td><strong><code>ondrain</code></strong></td>
@@ -1153,11 +1157,7 @@ Style guide to contributors:
             <tr>
               <td><strong><code>onclose</code></strong></td>
               <td><code><dfn>close</dfn></code></td>
-            </tr>    
-            <tr>
-              <td><strong><code>onhalfclose</code></strong></td>
-              <td><code><dfn>halfclose</dfn></code></td>
-            </tr>                                                      
+            </tr>                                                       
             <tr>
               <td><strong><code>onerror</code></strong></td>
               <td><code><dfn>error</dfn></code></td>
@@ -1165,10 +1165,10 @@ Style guide to contributors:
           </tbody>                    
         </table>
 
-        <p>The <code>message</code> event MUST implement the 
+        <p>The <code>data</code> event MUST implement the 
            <code>MessageEvent</code> interface, [[!POSTMSG]]. The event's data 
            attribute is intialized to a new read-only <code>ArrayBuffer</code> 
-           object whose contents are the recieved UDP data. [[!TYPED-ARRAYS]]</p>  
+           object whose contents are the recieved TCP data. [[!TYPED-ARRAYS]]</p>  
         <p>The <code>error</code> event MUST implement the 
            <a>SocketErrorEvent</a> interface. </p>                  
 
@@ -1200,7 +1200,7 @@ Style guide to contributors:
                 myServerSocket.onconnect = function (connectEvent) {
                     var connectedSocket = connectEvent.connectedSocket;
                     // Read the data
-                    connectedSocket.onmessage = function (messageEvent) {
+                    connectedSocket.ondata = function (messageEvent) {
                         var data = messageEvent.data;
                         try {
                             // Send data back to client
@@ -1316,8 +1316,8 @@ Style guide to contributors:
              local interface and set the <code>localAddress</code> attribute to 
              the local address that the socket is bound to.
          <li>If the <code>options</code> argument's <code>localPort</code> member
-             is absent then bind the socket to any available randomly selected 
-             local port and set the <code>localPort</code> attribute to null. 
+             is absent then bind the socket to an ephemeral local port decided 
+             by the system and set the <code>localPort</code> attribute to null. 
              Otherwise, bind the socket to the requested local port and 
              set the <code>localPort</code> attribute to the local port that the 
              socket is bound to.             
@@ -1551,7 +1551,8 @@ Style guide to contributors:
             already is in use. Default is <code>true</code>.</dd>
             
         <dt>boolean loopback</dt>
-        <dd><code>true</code> means that data you send is looped back to your host. 
+        <dd>Only applicable for multicast.<code>true</code> means that data 
+            you send is looped back to your host. 
             Default is <code>false</code>.</dd>     
    
       </dl>   
@@ -1583,7 +1584,11 @@ Style guide to contributors:
         <dt>boolean addressReuse</dt>
         <dd><code>true</code> allows the socket to be bound to a local 
             address/port pair that already is in use. Default is <code>true</code>.
-            </dd>            
+            </dd>        
+            
+        <dt>boolean noDelay</dt>
+        <dd><code>true</code> if the Nagle algorithm for send coalescing is disabled. Default is 
+            <code>true</code>.</dd>                
             
         <dt>boolean useSecureTransport</dt>
         <dd><code>true</code> if socket uses SSL or TLS. Default is 
@@ -1656,9 +1661,9 @@ Style guide to contributors:
           <dd>The socket is closed and can not be use to send and received data. 
               For TCP the connection has been closed or could not be opened.</dd>      
           <dt>halfclosed</dt>
-          <dd>Only used for TCP sockets. The TCP connection has been "halfclosed", 
-              which means that it is not possible to send data but it is still 
-              possible to receive.</dd>                      
+          <dd>Only used for TCP sockets. The TCP connection has been "halfclosed"
+              by the application, which means that it is not possible to send data 
+              but it is still possible to receive.</dd>                      
         </dl>          
       </section>         
       
