@@ -190,95 +190,85 @@ Style guide to contributors:
       <p>The <a>UDPSocket</a> interface defines attributes and methods for 
          UDP communication</p> 
       
-      <pre class="example highlight">
-        // 
-        // This example shows a simple implementation of UPnP-SSDP M-SEARCH discovery 
-        // using a multicast UDPSocket 
-        //
-        // Build an SSDP M-SEARCH multicast message
-        var MSearch = "M-SEARCH * HTTP/1.1\r\n" +
-            "ST: " + ServiceType + "\r\n" +
-            "MAN: \"ssdp:discover\"\r\n" +
-            "HOST: 239.255.255.250:1900\r\n" +
-            "MX: 10\r\n\r\n";
+      <p>This example shows a simple implementation of UPnP-SSDP 
+          M-SEARCH discovery using a multicast UDPSocket</p>
 
-        var SSDPMulticastAddress = "239.255.255.250";
-        var SSDPMulticastPort = 1900;
+      <pre class="example highlight"> 
+        var socket = new UDPSocket(),
+            address = '239.255.255.250';
 
-        // Create a UDP socket
-        var mySocket = new UDPSocket();
+        //Set up event handlers
+        socket.addEventListener('open', handleOpen);
+        socket.addEventListener('error', handleError);
+        socket.addEventListener('message', handleMessage);
 
-        // UDP Socket has been created successfully       
-        mySocket.onopen = function () {
+        //Start communication
+        socket.joinMulticast(address);
 
-            try {
-                // Join multicast group
-                mySocket.joinMulticast(SSDPMulticastAddress);
+        function handleOpen(e) {
+            var port = '1900',
+                serviceType = 'udap:rootservice',
+                rn = '\r\n',
+                search = '';
 
-                // Send SSDP M-SEARCH multicast message
-                var moreBufferingOK = mySocket.send(MSearch, SSDPMulticastAddress,
-                    SSDPMulticastPort);
-                console.log('M-SEARCH Sent!');
-            } catch (err) {
-                // Sending failed      
-                console.error('Sending M-SEARCH failed: ' + err.name);
-            }
+            // Build an SSDP M-SEARCH multicast message
+            search += 'M-SEARCH * HTTP/1.1' + rn;
+            search += 'ST: ' + serviceType + rn;
+            search += 'MAN: \'ssdp:discover\' + rn;
+            search += 'HOST: ' + address + ':' + port + rn;
+            search += 'MX: 10';
 
-            // Receive M-SEARCH responses          
-            mysocket.onmessage = function (udpMessageEvent) {
-                // Convert received data from ArrayBuffer to string
-                var data = arrayBufferToString(udpMessageEvent.data);
-                console.log("Remote address: " + udpMessageEvent.remoteAddress +
-                    " Remote port: " + udpMessageEvent.remotePort +
-                    " Received data" + data);
-            };
+            this.send(search, address, port);
+            console.log('M-SEARCH Sent');
+        }
 
-        };
+        function handleMessage(e) {
+            var msg = '';
+            msg += 'Remote address: ' + e.remoteAddress;
+            msg += ' Remote port: ' + e.remotePort;
+            console.log(msg, data);
+        }
 
-        // Handle errors
-        mySocket.onerror = function (err) {
-            console.error('Error: ' + err.name);
-        };            
-        
+        function handleError(e) {
+            console.error('Error: ' + e.name);
+        }
       </pre>
       
+      <p>This example shows a a simple implementation of reception of UPnP-SSDP 
+        NOTIFY multicast messages</p>
+
       <pre class="example highlight">
-        // 
-        // This example shows a a simple implementation of reception of UPnP-SSDP 
-        // NOTIFY multicast messages 
-        //
-        var SSDPMulticastAddress = "239.255.255.250";
-        var SSDPMulticastPort = 1900;
+        var config = {
+            'localPort': 1900
+        };
 
         // Create a UDP socket and bind it to the IP-address of the default 
         // local interface and to the SSDP local port
-        var mySocket = new UDPSocket({
-            "localPort": SSDPMulticastPort
-        });
+        var socket = new UDPSocket(config);
 
-         // UDP Socket has been created successfully       
-        mySocket.onopen = function () {
+        //Set up event handlers
+        socket.addEventListener('open', handleOpen);
+        socket.addEventListener('error', handleError);
+        socket.addEventListener('message', handleMessage);
 
+        function handleOpen(event) {
+            var address = '239.255.255.250';
             // Join multicast group
-            mySocket.joinMulticast(SSDPMulticastAddress);
-
-            // Receive SSDP NOTFIY         
-            mysocket.onmessage = function (UDPMessageEvent) {
-                // Convert received data from ArrayBuffer to string
-                var data = arrayBufferToString(UDPMessageEvent.data);
-                console.log("Remote address: " + UDPMessageEvent.remoteAddress +
-                            " Remote port: " + UDPMessageEvent.remotePort +
-                            " Received data" + data);
-            };
-
+            this.joinMulticast(address);
         };
 
-        // Handle errors
-        mySocket.onerror = function (err) {
+        function handleMessage(e) {
+            var msg = '';
+            msg += 'Remote address: ' + e.remoteAddress;
+            msg += ' Remote port: ' + e.remotePort;
+
+            console.log(msg, e.data);
+        }
+
+        function (err) {
             console.error('Error: ' + err.name);
-        };     
-        
-      </pre>      
+        }
+      </pre>
       
       <dl title="[Constructor (optional UDPOptions options)] 
                  interface UDPSocket : EventTarget"
@@ -712,23 +702,23 @@ Style guide to contributors:
        try {
 
            //  Create a new TCP client socket and connect to remote host
-           var mySocket = new TCPSocket("127.0.0.1", 6789);
+           var socket = new TCPSocket("127.0.0.1", 6789);
 
            // TCP socket has successfully been created
-           mySocket.onopen = function () {
+           socket.onopen = function () {
                try {
                    // Send data to server
-                   var moreBufferingOK = mySocket.send("Hello World");
+                   var okToBuffer = socket.send("Hello World");
                    console.log('Data sent to server!');
 
                    // Receive response from server
-                   mySocket.onmessage = function (messageEvent) {
+                   socket.onmessage = function (messageEvent) {
                        // Convert received data from ArrayBuffer to string
                        var data = arrayBufferToString(messageEvent.data);
                        console.log('Data received from server: ' + data);
 
                        // Close the connection
-                       mySocket.close();
+                       socket.close();
                    };
 
                };
@@ -739,12 +729,12 @@ Style guide to contributors:
            }
 
            // Connection has been closed 
-           mySocket.onclose = function {
+           socket.onclose = function {
                console.log('Connection has been closed');
            };
 
            // Handle errors
-           mySocket.onerror = function (err) {
+           socket.onerror = function (err) {
                console.error('Error: ' + err.name);
            };
 
@@ -1204,7 +1194,7 @@ Style guide to contributors:
                         var data = messageEvent.data;
                         try {
                             // Send data back to client
-                            var moreBufferingOK = connectedSocket.send(data);
+                            var okToBuffer = connectedSocket.send(data);
                             console.log('Response sent to client!');
                         } catch (err) {
                             // Sending failed      
