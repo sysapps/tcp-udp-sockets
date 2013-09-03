@@ -257,13 +257,12 @@ Style guide to contributors:
             this.joinMulticast(address);
         };
 
-        function handleMessage(event) {
+        function handleMessage(e) {
             var msg = '';
-            msg += 'Remote address: ' + event.remoteAddress;
-            msg += ' Remote port: ' + event.remotePort;
-            msg += ' Received data' + data;
+            msg += 'Remote address: ' + e.remoteAddress;
+            msg += ' Remote port: ' + e.remotePort;
 
-            console.log(msg, event.data);
+            console.log(msg, e.data);
         }
 
         function (err) {
