@@ -77,6 +77,19 @@
           // doubt ask your friendly neighbourhood Team Contact.
           wgPatentURI:  "http://www.w3.org/2004/01/pp-impl/58119/status",
           
+          // Reference to the Nagle algorithm
+          localBiblio:  {
+            "NAGLE": {
+              title:    "Nagle algorithm", 
+              href:     "http://www.rfc-editor.org/rfc/rfc896.txt",
+              authors:  [
+               "John Nagle"
+              ],   
+              status:   "Request For Comments",
+              publisher:  "IETF"
+            }
+          },
+          
           otherLinks: [{
             key: "Repository",
             data: [{
@@ -319,8 +332,8 @@ Style guide to contributors:
             argument in the constructor. Default is <code>true</code>.</dd>
             
         <dt>readonly attribute boolean loopback</dt>
-        <dd>Only applicable for multicast.<code>true</code> means that data 
-            you send is looped back to your host.           
+        <dd>Only applicable for multicast.<code>true</code> means that sent 
+            multicast data is looped back to the sender.           
             Can be set by the <code>options</code> argument in the constructor.  
             Default is <code>false</code>.</dd>               
                                      
@@ -727,7 +740,7 @@ Style guide to contributors:
            mySocket.onopen = function () {
                try {
                    // Send data to server
-                   var moreBufferingOK = mySocket.send("Hello World");
+                   mySocket.send("Hello World");
                    console.log('Data sent to server!');
 
                    // Receive response from server
@@ -797,9 +810,10 @@ Style guide to contributors:
             argument in the constructor. Default is <code>true</code>.</dd> 
             
         <dt>readonly attribute boolean noDelay</dt>
-        <dd><code>true</code> if the Nagle algorithm for send coalescing is 
-            disabled. Can be set by the <code>options</code> argument in the 
-            constructor. Default is <code>true</code>.</dd>                                   
+        <dd><code>true</code> if the Nagle algorithm for send coalescing,  
+            [[!NAGLE]], is disabled. Can be set by the 
+            <code>options</code> argument in the constructor. Default is 
+            <code>true</code>.</dd>                                   
             
         <dt>readonly attribute unsigned long bufferedAmount</dt>
         <dd>This attribute contains the number of bytes which have previously been 
@@ -1537,13 +1551,13 @@ Style guide to contributors:
           
         <dt>DOMString localAddress</dt>
         <dd>The IPv4/6 address of the interface, e.g. wifi or 3G, that the 
-            UDPSocket object is bound to. If the field is omitted the user agent 
+            UDPSocket object is bound to. If the field is omitted, the user agent 
             binds the socket to the IPv4/6 address of the default local 
             interface. </dd>   
         
         <dt>unsigned short localPort</dt>
         <dd>The local port that the UDPSocket object is bound to. If the the field 
-            is omitted the user agent binds the socket to a an ephemeral local 
+            is omitted, the user agent binds the socket to a an ephemeral local 
             port decided by the system.</dd>             
 
         <dt>DOMString remoteAddress</dt>
@@ -1559,8 +1573,8 @@ Style guide to contributors:
             already is in use. Default is <code>true</code>.</dd>
             
         <dt>boolean loopback</dt>
-        <dd>Only applicable for multicast.<code>true</code> means that data 
-            you send is looped back to your host. 
+        <dd>Only applicable for multicast.<code>true</code> means that sent 
+            multicast data is looped back to the sender. 
             Default is <code>false</code>.</dd>     
    
       </dl>   
@@ -1580,13 +1594,13 @@ Style guide to contributors:
         
         <dt>DOMString localAddress</dt>
         <dd>The IPv4/6 address of the interface, e.g. wifi or 3G, that the 
-            UDPSocket object is bound to. If the field is omitted the user agent 
+            UDPSocket object is bound to. If the field is omitted, the user agent 
             binds the socket to the IPv4/6 address of the default local 
             interface. </dd>  
         
         <dt>unsigned short localPort</dt>
         <dd>The local port that the UDPSocket object is bound to. If the the field 
-            is omitted the user agent binds the socket to an ephemeral local port 
+            is omitted, the user agent binds the socket to an ephemeral local port 
             decided by the system.</dd>    
             
         <dt>boolean addressReuse</dt>
@@ -1595,7 +1609,8 @@ Style guide to contributors:
             </dd>        
             
         <dt>boolean noDelay</dt>
-        <dd><code>true</code> if the Nagle algorithm for send coalescing is disabled. Default is 
+        <dd><code>true</code> if the Nagle algorithm for send coalescing, 
+            [[!NAGLE]], is disabled. Default is 
             <code>true</code>.</dd>                
             
         <dt>boolean useSecureTransport</dt>
@@ -1622,13 +1637,13 @@ Style guide to contributors:
           
         <dt>DOMString localAddress</dt>
         <dd>The IPv4/6 address of the interface, e.g. wifi or 3G, that the 
-            TCPServerSocket object is bound to. If the field is omitted the 
+            TCPServerSocket object is bound to. If the field is omitted, the 
             user agent binds the server socket to the IPv4/6 address of the 
             default local interface. </dd> 
                      
         <dt>unsigned short localPort</dt>
         <dd>The local port that the TCPServerSocket object is bound to. If the 
-            the field is omitted the user agent binds the socket to an ephemeral 
+            the field is omitted, the user agent binds the socket to an ephemeral 
             local port decided by the system.</dd>    
             
         <dt>boolean addressReuse</dt>
