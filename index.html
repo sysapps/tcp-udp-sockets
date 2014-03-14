@@ -948,12 +948,12 @@ Style guide to contributors:
             TCP connection goes in to this writable stream object. 
             [[!STREAMS]] </dd>               
 
-        <dt> void close()</dt>
+        <dt> void socketClose()</dt>
         <dd>        
           <p>Closes the TCP socket.</p>        
         </dd>   
         
-        <dt> void halfClose()</dt>
+        <dt> void socketHalfClose()</dt>
         <dd>        
           <p>Half closes the TCP socket.</p>        
         </dd>                                                                    
@@ -1014,75 +1014,98 @@ Style guide to contributors:
              argument's <code>noDelay</code> member is not present.             
          <li>Set the <code>mySocket.readyState</code> attribute to "opening".          
          <li>Create a new promise, "<code>openingPromise</code>". 
+           <p class="issue">
+             How to express the association between <code>openingPromise</code>
+             and the <code>opened</code> attribute?                
+           </p>    
          
          <li>Let the <code>mySocket.output</code> attribute be a new 
-             ReadableStream object, [[!STREAMS]], for which the constructor is 
-             given a number of functions as input arguments:
+             ReadableStream object, [[!STREAMS]]. The User Agent MUST implement 
+             the adaptation layer to [[!STREAMS]] for this new ReadableStream 
+             object through implementation of a number of functions that are 
+             given as input arguments to the constructor and called by the 
+             [[!STREAMS]] implementation. The semantics for these 
+             functions are described below:
+
              <ul> 
-               <li>The constuctor's <code>start()</code> function is called 
-                   immediately and MUST perform the TCP conncection setup handshake 
-                   to the requested address and port in the background (without 
-                   blocking scripts). 
-                   When the TCP connection has been successfully established the 
-                   following steps MUST run:      
+               <li>The constructor's <code>start()</code> function is called 
+                   immediately by the [[!STREAMS]] implementation. 
+                   The <code>start()</code> function MUST run the following steps:
                    <ol>
-                     <li>Change the <code>readyState</code> attribute's value to 
-                         "open".    
-                     <li>Resolve <code>openingPromise</code> with <code>undefined</code>.
-                     <li>Create a new promise, "<code>outputClosedPromise</code>". 
-                   </ol>   
-                   The following functions are arguments of the constuctor's 
-                   <code>start()</code> function and defined as follows:
+                     <li>A TCP connection setup handshake to the requested 
+                         address and port MUST be performed in the background 
+                         (without blocking scripts). 
+                     <li>When the TCP connection has been successfully established 
+                         the following steps MUST run:      
+                       <ol>
+                         <li>Change the <code>readyState</code> attribute's value to 
+                             "open".    
+                         <li>Resolve <code>openingPromise</code> with <code>undefined</code>.
+                       </ol>
+                   </ol>                       
+                   The following functions are arguments of the constructor's 
+                   <code>start()</code> function and MUST be called by the 
+                   <code>start()</code> function implementation according to the
+                   following steps:
                    <ul>                     
                      <li>The <code>push()</code> argument of <code>start()</code> 
-                         is a function that pushes received TCP data into the 
-                         internal buffer. When the high watermark of the buffer 
-                         is reached <code>push()</code> returns false and the
-                         TCP flow control stops the data transmission.                                 
+                         is a function that pushes received data into the 
+                         internal buffer. When new TCP data is received the 
+                         following steps MUST run:
+                         <ol>
+                           <li>If it is not possible to convert the received 
+                               TCP data to <code>ArrayBuffer</code>, 
+                               [[!TYPED-ARRAYS]], then reject 
+                               <code>openingPromise</code> with TypeError and
+                               abort the remaining steps.     
+                           <li>Create a new read-only <code>ArrayBuffer</code> 
+                               object whose contents are the received TCP data.
+                           <li>Call <code>push()</code> to push the
+                               <code>ArrayBuffer</code> into the internal 
+                               [[!STREAMS]] receive buffer. 
+                           <li>If the high watermark of the buffer is reached 
+                               <code>push()</code> returns false and the TCP 
+                               flow control MUST be used to stop the data 
+                               transmission from the remote peer.          
+                         </ol>                                                           
                      <li>The <code>close()</code> argument of <code>start()</code> 
-                         is a function that is called when the TCP connection has 
-                         been closed cleanly, either by the server, or by the 
-                         client calling <code>close()</code>.
+                         is a function that MUST be called when the TCP connection 
+                         has been closed cleanly. The TCP connection termination 
+                         could have been initiated either by the server, or by 
+                         the client application calling <code>socketClose()</code>.
                          The <code>close()</code> function MUST run the following 
                          steps:      
-                           <ol>
-                             <li>Resolve <code>outputClosedPromise</code> with 
-                                 <code>undefined</code>.         
+                           <ol>       
                              <li>Set the <code>readyState</code> attribute's 
-                                 value to "closed".    
+                                 value to "closed".        
                            </ol> 
                       <li>The <code>error()</code> argument of <code>start()</code> 
-                          is a function that is called when the attempt to create 
-                          a new TCP socket and establish a new TCP connection 
+                          is a function that MUST be called when the attempt to 
+                          create a new TCP socket and establish a new TCP connection 
                           (<code>readyState</code> is "opening") has failed or 
                           when the established TCP connection (<code>readyState</code> 
                           is "open") is lost. The following steps MUST run:      
-                          <ol>
-                            <li>Create a new instance of <a>SocketError</a> 
-                                ("<code>error</code>").       
-                            <li>Set the <code>error.name</code> attribute to 
-                                "NetworkError".    
-                            <li>Set the <code>error.type</code> attribute to the 
-                                appropriate error type. See enum <a>SocketErrorType</a>.                            
-                            <li>Set the <code>error.message</code> attribute to an 
-                                informative message stating the reason for 
-                                the error.                        
-                            <li>If <code>readyState</code> is "opening" reject 
-                                <code>openingPromise</code> with <code>error</code> 
-                                else if <code>readyState</code> is "open" reject 
-                                <code>outputClosedPromise</code> with 
-                                <code>error</code>.           
+                          <ol>                                                 
+                            <li>Reject <code>openingPromise</code> with DOMException 
+                                <code>NETWORK_ERR</code>.           
                             <li>Change the <code>readyState</code> attribute's value 
                                 to "closed".                              
                           </ol>    
                    </ul>                  
-                 <li>The constructor's <code>pull()</code> function is called if 
-                     the internal buffer has been emptied, but the stream's consumer 
-                     still wants more data. The function MUST resume receiving
-                     TCP data through the TCP flow control mechanism.                
+                 <li>The constructor's <code>pull()</code> function is called 
+                     by the [[!STREAMS]] implementation if the internal buffer 
+                     has been emptied, but the stream's consumer still wants more 
+                     data. 
+                     The <code>pull()</code> function MUST run the following steps:
+                     <ol>
+                       <li>The function MUST resume receiving TCP data through the 
+                           TCP flow control mechanism.  
+                     </ol>                       
                  <li>The constructor's <code>cancel()</code> function input 
-                     argument is called when the TCP connection should be closed.
-                     The follwoing steps MUST run:  
+                     argument is called by the [[!STREAMS]] implementation when 
+                     the ReadbleStream should be canceled. For TCP this means that
+                     the TCP connection should be terminated.
+                     The <code>cancel()</code> function MUST run the following steps:  
                      <ol>
                        <li>If <code>readyState</code> is "closing" or "closed" then 
                            do nothing and abort the remaning steps.    
@@ -1096,23 +1119,50 @@ Style guide to contributors:
              </ul>                   
                     
          <li>Let the <code>mySocket.input</code> attribute be a new 
-             WritableStream object, [[!STREAMS]], for which the constructor 
-             is given the following functions as input arguments:
+             WritableStream object, [[!STREAMS]]. The User Agent MUST implement 
+             the adaptation layer to [[!STREAMS]] for this new WritableStream 
+             object through implementation of a number of functions that are 
+             given as input arguments to the constructor and called by the 
+             [[!STREAMS]] implementation. The semantics for these 
+             functions are described below:
+                          
              <ul> 
-               <li>A <code>start()</code> function that is called when the 
-                   writable stream is created. When the TCP connection
-                   has been successfully established the following steps MUST 
-                   run:      
+               <li>The constructor's <code>start()</code> function is called 
+                   immediately by the [[!STREAMS]] implementation.     
+                   <p class="issue">
+                     Not sure if this function has to do anything. The sink is
+                     the same TCP connection as was created with the the 
+                     <code>mySocket.input</code> attribute constructor's 
+                     <code>start()</code> function               
+                   </p>                     
+               <li>The constructor's <code>write(data, done, error)</code> 
+                   function is called by the [[!STREAMS]] implementation to write data to the remote peer on the 
+                   TCP connection.
+                   The <code>write()</code> function MUST run the following steps:
                    <ol>
-                     <li>Create a new promise, "<code>inputClosedPromise</code>". 
-                   </ol>                    
-               <li>A <code>write()</code> function that writes data to the 
-                   remote peer on the TCP connection.
-                   Further TBD....
-                           
-               <li>A <code>close()</code> function that closes the writable side 
-                   of the connection, that is performs a TCP "half close".
-                   The following steps MUST run:
+                     <li>Send TCP data with data passed in the <code>data</code>
+                         parameter to the address and port of the recipient as 
+                         stated by the TCPSocket object constructor's 
+                         <code>remoteAddress</code> and <code>remotePort</code> 
+                         fields. <br>
+                         The following functions are arguments of the constuctor's 
+                         <code>write()</code> function and MUST be called by the 
+                         <code>write()</code> function implementation:
+                         <ul>
+                           <li>The <code>done()</code> argument of <code>write()</code> 
+                               is a function that MUST be called when the 
+                               buffered data has been sent to the remote peer  
+                               the underlying resource is ready for more data. 
+                           <li>The <code>error(errorReason)</code> argument of <code>write()</code> 
+                               is a function that MUST be called if an error 
+                               ocurred during writing. (<code>errorReason</code>)
+                               TBD.                         
+                         </ul>                  
+                   </ol>                           
+               <li>The constructor's <code>close()</code> 
+                   function is called by the [[!STREAMS]] implementation to close the writable side 
+                   of the connection, that is a TCP "half close" is performed.
+                   The <code>close()</code> function MUST run the following steps:
                     <ol>
                      <li>If <code>readyState</code> is "closing" or "closed" then 
                          do nothing.
@@ -1120,8 +1170,7 @@ Style guide to contributors:
                          the connection attempt. If succesful send FIN and set the 
                          <code>readyState</code> attribute to "halfclosed".
                      <li>If <code>readyState</code> is "open" then send FIN and 
-                         set the <code>readyState</code> attribute to "halfclosed".
-                     <li>Resolve <code>inputClosedPromise</code> with <code>undefined</code>.                         
+                         set the <code>readyState</code> attribute to "halfclosed".                     
                    </ol>
  
              </ul>                                         
@@ -1131,14 +1180,14 @@ Style guide to contributors:
         </ol>
       </p>                               
     
-      <p> The <dfn><code>close()</code></dfn> method when invoked MUST run the 
+      <p> The <dfn><code>socketClose()</code></dfn> method when invoked MUST run the 
           following steps:
         <ol>
           <li>Call <code>mysocket.output.cancel(reason)</code>. (Reason codes TBD.)  
         </ol>
       </p>   
       
-      <p> The <dfn><code>halfClose()</code></dfn> method when invoked MUST run the 
+      <p> The <dfn><code>socketHalfClose()</code></dfn> method when invoked MUST run the 
           following steps:
         <ol>
          <li>Call <code>mysocket.input.close()</code>.            
