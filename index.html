@@ -851,7 +851,7 @@ Style guide to contributors:
                        console.log("Data received from server:" + mySocket.output.read());
        
                        // Close the TCP connection
-                       mySocket.close();
+                       mySocket.socketClose();
                    },
                     
                    e => console.error("Receiving error: ", e);
@@ -861,7 +861,7 @@ Style guide to contributors:
        );
        
        // Signal that we won't be writing any more and can close the write half of the connection.
-       mySocket.halfClose();
+       mySocket.socketHalfClose();
 
        // Handle result of TCP connection attempt. 
        mySocket.opened.then(
@@ -934,15 +934,16 @@ Style guide to contributors:
             
         <dt> readonly attribute Promise opened</dt>
         <dd> Detects the result of the TCP connection attempt with the remote 
-             peer.      
+             peer. Returns the <code>openingPromise</code> that was created 
+             in the <code>TCPSocket</code> constructor.    
         </dd>             
          
-        <dt>attribute ReadableStream output</dt>
+        <dt>readonly attribute ReadableStream output</dt>
         <dd>The object that represents the TCP socket's source of data, from which 
             you can read. In other words, data from the TCP connection comes 
             out of this readable stream object. [[!STREAMS]] </dd>     
             
-        <dt>attribute WriteableStream input</dt>
+        <dt>readonly attribute WriteableStream input</dt>
         <dd>The object that represents the TCP socket's destination for data, 
             into which you can write. In other words, data to be sent on the 
             TCP connection goes in to this writable stream object. 
@@ -966,7 +967,7 @@ Style guide to contributors:
          <li>Create a new TCPSocket object ("<code>mySocket</code>").
          <li>If the <code>remoteAddress</code> argument is not a valid IPv4/6 
              address and/or the <code>remotePort</code> argument is not a valid 
-             port number then throw DOMException <code>InvalidAccessError</code> 
+             port number then throw DOMException <code>INVALID_ACCESS_ERR</code> 
              and abort the remaining steps, else set the <code>mySocket.remoteAddress</code> 
              and <code>mySocket.remotePort</code> attributes to the requested values.
          <li>If the <code>options</code> argument's <code>localAddress</code> 
@@ -978,7 +979,7 @@ Style guide to contributors:
              member is present but it is not a valid local IPv4/6 address for a 
              local interface that can be used to connect to the selected 
              <code>remoteAddress</code> then throw DOMException 
-             <code>InvalidAccessError</code> and abort the remaining steps.<br/>
+             <code>INVALID_ACCESS_ERR</code> and abort the remaining steps.<br/>
              Otherwise, if the <code>options</code> argument's <code>localAddress</code> 
              member is absent, execute the following steps: 
              <ol>
@@ -986,7 +987,7 @@ Style guide to contributors:
                     can be used to connect to the selected <code>remoteAddress</code>. 
                     If no local interface can be used to connect to the selected 
                     <code>remoteAddress</code> then throw DOMException 
-                    <code>InvalidAccessError</code> and abort the remaining 
+                    <code>INVALID_ACCESS_ERR</code> and abort the remaining 
                     steps.
                <li> If the routing table states that more than one local interface 
                     can be used to connect to the selected <code>remoteAddress</code>
@@ -1013,11 +1014,9 @@ Style guide to contributors:
              if it is present or to <code>true</code> if the <code>options</code> 
              argument's <code>noDelay</code> member is not present.             
          <li>Set the <code>mySocket.readyState</code> attribute to "opening".          
-         <li>Create a new promise, "<code>openingPromise</code>". 
-           <p class="issue">
-             How to express the association between <code>openingPromise</code>
-             and the <code>opened</code> attribute?                
-           </p>    
+         <li>Create a new promise, "<code>openingPromise</code>", and store 
+             it so it can later be returned by the <code>opened</code> 
+             property.    
          
          <li>Let the <code>mySocket.output</code> attribute be a new 
              ReadableStream object, [[!STREAMS]]. The User Agent MUST implement 
@@ -1050,8 +1049,9 @@ Style guide to contributors:
                    <ul>                     
                      <li>The <code>push()</code> argument of <code>start()</code> 
                          is a function that pushes received data into the 
-                         internal buffer. When new TCP data is received the 
-                         following steps MUST run:
+                         internal buffer. <br>
+                         When new TCP data is received the following steps MUST 
+                         run:
                          <ol>
                            <li>If it is not possible to convert the received 
                                TCP data to <code>ArrayBuffer</code>, 
@@ -1069,28 +1069,51 @@ Style guide to contributors:
                                transmission from the remote peer.          
                          </ol>                                                           
                      <li>The <code>close()</code> argument of <code>start()</code> 
-                         is a function that MUST be called when the TCP connection 
-                         has been closed cleanly. The TCP connection termination 
-                         could have been initiated either by the server, or by 
-                         the client application calling <code>socketClose()</code>.
-                         The <code>close()</code> function MUST run the following 
-                         steps:      
-                           <ol>       
-                             <li>Set the <code>readyState</code> attribute's 
-                                 value to "closed".        
-                           </ol> 
+                         is a function that closes the readable stream.<br> 
+                         Upon detection that the TCP connection has been closed
+                         cleanly (initiated either by the server, or by 
+                         the client application calling <code>socketClose()</code>) 
+                         through a successful TCP connection closing handshake 
+                         the following steps MUST run:      
+                         <ol>  
+                           <li>Call <code>close()</code>.  
+                           <li>Set the <code>readyState</code> attribute's 
+                               value to "closed".  
+                           <li>Resolve <code>closingPromise</code> with 
+                               <code>undefined</code>.       
+                         </ol> 
                       <li>The <code>error()</code> argument of <code>start()</code> 
-                          is a function that MUST be called when the attempt to 
-                          create a new TCP socket and establish a new TCP connection 
-                          (<code>readyState</code> is "opening") has failed or 
-                          when the established TCP connection (<code>readyState</code> 
-                          is "open") is lost. The following steps MUST run:      
+                          is a function that handles readable stream errors and 
+                          closes the readble stream.<br> 
+                          Upon detection that the attempt to 
+                          create a new TCP socket and establish a new TCP 
+                          connection (<code>readyState</code> is "opening") has 
+                          failed the following steps MUST run:      
                           <ol>                                                 
+                            <li>Call <code>error()</code>.
                             <li>Reject <code>openingPromise</code> with DOMException 
                                 <code>NETWORK_ERR</code>.           
                             <li>Change the <code>readyState</code> attribute's value 
-                                to "closed".                              
-                          </ol>    
+                                to "closed".                               
+                          </ol> 
+                          Upon detection that the established TCP connection 
+                          (<code>readyState</code> is "open") has been lost 
+                          the following steps MUST run:      
+                          <ol>                                                 
+                            <li>Call <code>error()</code>.                                     
+                            <li>Change the <code>readyState</code> attribute's value 
+                                to "closed".                               
+                          </ol>   
+                          Upon detection that the TCP connection closing
+                          handshake failed (<code>readyState</code> is "closing")
+                          has failed the following steps MUST run:      
+                          <ol>                                                 
+                            <li>Call <code>error()</code>.  
+                            <li>Reject <code>closingPromise</code> with DOMException 
+                                <code>NETWORK_ERR</code>.                                      
+                            <li>Change the <code>readyState</code> attribute's value 
+                                to "closed".                               
+                          </ol>   
                    </ul>                  
                  <li>The constructor's <code>pull()</code> function is called 
                      by the [[!STREAMS]] implementation if the internal buffer 
@@ -1110,11 +1133,16 @@ Style guide to contributors:
                        <li>If <code>readyState</code> is "closing" or "closed" then 
                            do nothing and abort the remaning steps.    
                        <li>If <code>readyState</code> is "opening" then fail the 
-                           connection attempt and set the <code>readyState</code> 
-                           attribute to "closing".
+                           connection attempt, reject <code>openingPromise</code>
+                           with DOMException <code>ABORT_ERR</code> and set the 
+                           <code>readyState</code> attribute to "closing".
                        <li>If <code>readyState</code> is "open" initiate TCP 
                            closing handshake and set the <code>readyState</code> 
-                           attribute to "closing".           
+                           attribute to "closing".  
+                       <li>Return a promise, "<code>closingPromise</code>", that 
+                           will be resolved when the closing handshake completes 
+                           successfully, or rejected with some kind of error if 
+                           it fails.         
                      </ol>                   
              </ul>                   
                     
@@ -1127,14 +1155,10 @@ Style guide to contributors:
              functions are described below:
                           
              <ul> 
-               <li>The constructor's <code>start()</code> function is called 
-                   immediately by the [[!STREAMS]] implementation.     
-                   <p class="issue">
-                     Not sure if this function has to do anything. The sink is
-                     the same TCP connection as was created with the the 
-                     <code>mySocket.input</code> attribute constructor's 
-                     <code>start()</code> function               
-                   </p>                     
+               <li>The constructor's <code>start()</code> function MUST be
+                   omitted as the TCP connection establishment is performed
+                   in the <code>mySocket.output</code> attribute constructor's 
+                   <code>start()</code> function.                     
                <li>The constructor's <code>write(data, done, error)</code> 
                    function is called by the [[!STREAMS]] implementation to write data to the remote peer on the 
                    TCP connection.
@@ -1155,8 +1179,8 @@ Style guide to contributors:
                                the underlying resource is ready for more data. 
                            <li>The <code>error(errorReason)</code> argument of <code>write()</code> 
                                is a function that MUST be called if an error 
-                               ocurred during writing. (<code>errorReason</code>)
-                               TBD.                         
+                               ocurred during writing. (<code>errorReason</code>
+                               TBD).                         
                          </ul>                  
                    </ol>                           
                <li>The constructor's <code>close()</code> 
