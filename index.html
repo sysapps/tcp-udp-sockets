@@ -863,7 +863,7 @@ Style guide to contributors:
        // Signal that we won't be writing any more and can close the write half of the connection.
        mySocket.socketHalfClose();
 
-       // Handle result of TCP connection attempt. 
+       // Log result of TCP connection attempt. 
        mySocket.opened.then(
          () => {
            console.log("TCP connection established sucessfully");
@@ -871,21 +871,14 @@ Style guide to contributors:
          e =>console.error("TCP connection setup failed due to error: ", e);
        );
        
-       // Handle closed Readable and Writable streams, either as a result of the application calling    
-       // mySocket.close() or the other side closing the TCP socket connection or an error causing the stream or 
-       // the complete TCP connection to be closed
-       mySocket.input.closed.then(
+       // Handle TCP connection closed, either as a result of the application 
+       // calling mySocket.close() or the other side closed the TCP  
+       // connection or an error causing the TCP connection to be closed.
+       mySocket.closed.then(
          () => {
-           console.log("Socket has been cleanly closed for writing");
+            console.log("Socket has been cleanly closed");
          },
-         e => console.error("Socket closed for writing due to error: ", e);
-       );
-       
-       mySocket.output.closed.then(
-         () => {
-           console.log("Socket has been cleanly closed both for reading and for writing");
-         },
-         e => console.error("Socket closing for reading due to error: ", e);
+         e => console.error("Socket closed due to error: ", e);
        );
         
       </pre>      
@@ -934,9 +927,17 @@ Style guide to contributors:
             
         <dt> readonly attribute Promise opened</dt>
         <dd> Detects the result of the TCP connection attempt with the remote 
-             peer. Returns the <code>openingPromise</code> that was created 
+             peer. Returns the <code>openedPromise</code> that was created 
              in the <code>TCPSocket</code> constructor.    
-        </dd>             
+        </dd>           
+        
+        <dt> readonly attribute Promise closed</dt>
+        <dd> Detects when the TCP connection has been closed, either cleanly 
+             (initiated either by the server, or by the client application 
+             calling <code>socketClose()</code>) or through an error situation.
+             Returns the <code>closedPromise</code> that was created 
+             in the <code>TCPSocket</code> constructor.    
+        </dd>            
          
         <dt>readonly attribute ReadableStream output</dt>
         <dd>The object that represents the TCP socket's source of data, from which 
@@ -1014,9 +1015,12 @@ Style guide to contributors:
              if it is present or to <code>true</code> if the <code>options</code> 
              argument's <code>noDelay</code> member is not present.             
          <li>Set the <code>mySocket.readyState</code> attribute to "opening".          
-         <li>Create a new promise, "<code>openingPromise</code>", and store 
+         <li>Create a new promise, "<code>openedPromise</code>", and store 
              it so it can later be returned by the <code>opened</code> 
              property.    
+         <li>Create a new promise, "<code>closedPromise</code>", and store 
+             it so it can later be returned by the <code>closed</code> 
+             property.               
          
          <li>Let the <code>mySocket.output</code> attribute be a new 
              ReadableStream object, [[!STREAMS]]. The User Agent MUST implement 
@@ -1039,7 +1043,7 @@ Style guide to contributors:
                        <ol>
                          <li>Change the <code>readyState</code> attribute's value to 
                              "open".    
-                         <li>Resolve <code>openingPromise</code> with <code>undefined</code>.
+                         <li>Resolve <code>openedPromise</code> with <code>undefined</code>.
                        </ol>
                    </ol>                       
                    The following functions are arguments of the constructor's 
@@ -1056,7 +1060,7 @@ Style guide to contributors:
                            <li>If it is not possible to convert the received 
                                TCP data to <code>ArrayBuffer</code>, 
                                [[!TYPED-ARRAYS]], then reject 
-                               <code>openingPromise</code> with TypeError and
+                               <code>openedPromise</code> with TypeError and
                                abort the remaining steps.     
                            <li>Create a new read-only <code>ArrayBuffer</code> 
                                object whose contents are the received TCP data.
@@ -1079,7 +1083,7 @@ Style guide to contributors:
                            <li>Call <code>close()</code>.  
                            <li>Set the <code>readyState</code> attribute's 
                                value to "closed".  
-                           <li>Resolve <code>closingPromise</code> with 
+                           <li>Resolve <code>closedPromise</code> with 
                                <code>undefined</code>.       
                          </ol> 
                       <li>The <code>error()</code> argument of <code>start()</code> 
@@ -1091,8 +1095,10 @@ Style guide to contributors:
                           failed the following steps MUST run:      
                           <ol>                                                 
                             <li>Call <code>error()</code>.
-                            <li>Reject <code>openingPromise</code> with DOMException 
-                                <code>NETWORK_ERR</code>.           
+                            <li>Reject <code>openedPromise</code> with DOMException 
+                                <code>NETWORK_ERR</code>.   
+                            <li>Reject <code>closedPromise</code> with DOMException 
+                                <code>NETWORK_ERR</code>.             
                             <li>Change the <code>readyState</code> attribute's value 
                                 to "closed".                               
                           </ol> 
@@ -1100,7 +1106,9 @@ Style guide to contributors:
                           (<code>readyState</code> is "open") has been lost 
                           the following steps MUST run:      
                           <ol>                                                 
-                            <li>Call <code>error()</code>.                                     
+                            <li>Call <code>error()</code>. 
+                            <li>Reject <code>closedPromise</code> with DOMException 
+                                <code>NETWORK_ERR</code>.                                                                  
                             <li>Change the <code>readyState</code> attribute's value 
                                 to "closed".                               
                           </ol>   
@@ -1109,7 +1117,7 @@ Style guide to contributors:
                           has failed the following steps MUST run:      
                           <ol>                                                 
                             <li>Call <code>error()</code>.  
-                            <li>Reject <code>closingPromise</code> with DOMException 
+                            <li>Reject <code>closedPromise</code> with DOMException 
                                 <code>NETWORK_ERR</code>.                                      
                             <li>Change the <code>readyState</code> attribute's value 
                                 to "closed".                               
@@ -1133,16 +1141,12 @@ Style guide to contributors:
                        <li>If <code>readyState</code> is "closing" or "closed" then 
                            do nothing and abort the remaning steps.    
                        <li>If <code>readyState</code> is "opening" then fail the 
-                           connection attempt, reject <code>openingPromise</code>
+                           connection attempt, reject <code>openedPromise</code>
                            with DOMException <code>ABORT_ERR</code> and set the 
                            <code>readyState</code> attribute to "closing".
                        <li>If <code>readyState</code> is "open" initiate TCP 
                            closing handshake and set the <code>readyState</code> 
-                           attribute to "closing".  
-                       <li>Return a promise, "<code>closingPromise</code>", that 
-                           will be resolved when the closing handshake completes 
-                           successfully, or rejected with some kind of error if 
-                           it fails.         
+                           attribute to "closing".        
                      </ol>                   
              </ul>                   
                     
