@@ -77,8 +77,8 @@
           // doubt ask your friendly neighbourhood Team Contact.
           wgPatentURI:  "http://www.w3.org/2004/01/pp-impl/58119/status",
           
-          // Reference to the Nagle algorithm
           localBiblio:  {
+            // Reference to the Nagle algorithm
             "NAGLE": {
               title:    "Nagle algorithm", 
               href:     "http://www.rfc-editor.org/rfc/rfc896.txt",
@@ -87,20 +87,46 @@
               ],   
               status:   "Request For Comments",
               publisher:  "IETF"
-            }
+            },   
+            
+            // Reference to the WHATWG Streams API specification          
+            "STREAMS": {
+              "title": "Streams API",            
+              "href": "https://github.com/whatwg/streams",
+              "authors": ["Domenic Denicola"],              
+              "status": "unofficial",
+              "publisher": "WHATWG"
+            },
+            
+            // Reference to the W3C Streams API specification          
+            "W3C-STREAMS": {
+              "title": "W3C Streams API",            
+              "href": "https://dvcs.w3.org/hg/streams-api/raw-file/tip/Overview.htm",
+              "authors": ["Feras Moussa", "Takeshi Yoshino"],              
+              "status": "ED",
+              "publisher": "W3C"
+            },        
+            
+            // Reference to the ECMAScript, edition 6, specification        
+            "ES6": {
+              "title": "ECMA-262, 6th Edition / Draft January 20, 2014",            
+              "href": "http://people.mozilla.org/~jorendorff/es6-draft.html",        
+              "status": "Draft",
+              "publisher": "Ecma International"
+            }                    
           },
           
           otherLinks: [{
             key: "Repository",
             data: [{
                     value: "We are on Github.",
-                    href: "https://github.com/sysapps/tcp-udp-sockets"
+                    href: "https://github.com/sysapps/raw-sockets"
                 }, {
                     value: "File a bug.",
-                    href: "https://github.com/sysapps/tcp-udp-sockets/issues"
+                    href: "https://github.com/sysapps/raw-sockets/issues"
                 }, {
                     value: "Commit history.",
-                    href: "https://github.com/sysapps/tcp-udp-sockets/commits/gh-pages"
+                    href: "https://github.com/sysapps/raw-sockets/commits/gh-pages"
                 }
             ]
           }]          
@@ -130,6 +156,18 @@ Style guide to contributors:
     <section id='abstract'>
       This API provides interfaces to raw UDP sockets, TCP Client sockets and 
       TCP Server sockets.
+      <div class="note">
+        <p>
+          This specification is currently undergoing a major rewrite in order to 
+          be based on the Streams API. Currently the reference to the Streams API
+          is [[!STREAMS]] but there is ongoing work to align this specification
+          with [[!W3C-STREAMS]].
+        </p>
+        <p>
+          In the current version only the interface <a>TCPSocket</a> has been 
+          rewritten.
+        </p>
+      </div>      
     </section>
     
 <!----------------------------- Introduction --------------------------------->
@@ -172,6 +210,14 @@ Style guide to contributors:
 <!----------------------------- Terminology ---------------------------------->
     <section>
       <h2>Terminology</h2>
+      
+       <p>The <dfn id="promise"><code><a href="http://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise-objects">Promise</a></code></dfn> 
+          interface provides asynchronous access to the result of an operation 
+          that is ongoing, has yet to start, or has completed, as defined in
+          [[!ES6]].
+
+      </p>
+      
       <p>The <code><a href="http://dev.w3.org/html5/spec/webappapis.html#eventhandler"> 
          EventHandler</a></code> interface represents a callback used for event handlers 
          as defined in [[!HTML5]].
@@ -787,57 +833,59 @@ Style guide to contributors:
        // This example shows a simple TCP echo client. 
        // The client will send "Hello World" to the server on port 6789 and log 
        // what has been received from the server.
-       //        
-       try {
+       //   
+       
+       //  Create a new TCP client socket and connect to remote host     
+       var mySocket = new TCPSocket("127.0.0.1", 6789);
+       
+       // Send data to server
+       mySocket.input.write("Hello World").then(
+           () => {
+               
+               // Data sent sucessfully, wait for response
+               console.log("Data has been sent to server");
+               mySocket.output.wait().then(
+                   () => {
+                   
+                       // Data in buffer, read it
+                       console.log("Data received from server:" + mySocket.output.read());
+       
+                       // Close the TCP connection
+                       mySocket.socketClose();
+                   },
+                    
+                   e => console.error("Receiving error: ", e);
+               );
+           },
+           e => console.error("Sending error: ", e);
+       );
+       
+       // Signal that we won't be writing any more and can close the write half of the connection.
+       mySocket.socketHalfClose();
 
-           //  Create a new TCP client socket and connect to remote host
-           var mySocket = new TCPSocket("127.0.0.1", 6789);
-
-           // TCP socket has successfully been created
-           mySocket.onopen = function () {
-               try {
-                   // Send data to server
-                   mySocket.send("Hello World");
-                   console.log('Data sent to server!');
-
-                   // Receive response from server
-                   mySocket.ondata = function (messageEvent) {
-                       // Convert received data from ArrayBuffer to string
-                       var data = arrayBufferToString(messageEvent.data);
-                       console.log('Data received from server: ' + data);
-
-                       // Close the connection
-                       mySocket.close();
-                   };
-
-               };
-               catch (err) {
-                   // Handle exceptions      
-                   console.error('Exception: ' + err.name);
-               }
-           }
-
-           // Connection has been closed 
-           mySocket.onclose = function {
-               console.log('Connection has been closed');
-           };
-
-           // Handle errors
-           mySocket.onerror = function (err) {
-               console.error('Error: ' + err.name);
-           };
-
-       } catch (err) {
-
-           // Handle runtime exception    
-           console.error('Could not create a TCP socket: ' + err.name);
-       } 
+       // Log result of TCP connection attempt. 
+       mySocket.opened.then(
+         () => {
+           console.log("TCP connection established sucessfully");
+         },
+         e =>console.error("TCP connection setup failed due to error: ", e);
+       );
+       
+       // Handle TCP connection closed, either as a result of the application 
+       // calling mySocket.close() or the other side closed the TCP  
+       // connection or an error causing the TCP connection to be closed.
+       mySocket.closed.then(
+         () => {
+            console.log("Socket has been cleanly closed");
+         },
+         e => console.error("Socket closed due to error: ", e);
+       );
         
       </pre>      
       
       <dl title="[Constructor (DOMString remoteAddress, unsigned short remotePort, 
                  optional TCPOptions options)] 
-                 interface TCPSocket : EventTarget"
+                 interface TCPSocket"
           class="idl">         
           
         <dt>readonly attribute DOMString remoteAddress</dt>
@@ -873,122 +921,66 @@ Style guide to contributors:
             <code>options</code> argument in the constructor. Default is 
             <code>true</code>.</dd>                                   
             
-        <dt>readonly attribute unsigned long bufferedAmount</dt>
-        <dd>This attribute contains the number of bytes which have previously been 
-            buffered by calls to the send methods of this socket.</dd>                
-        
         <dt>readonly attribute ReadyState readyState</dt>
         <dd>The state of the TCP Socket object. See enum <a>ReadyState</a> for 
-            details.</dd> 
-
-        <dt>attribute EventHandler ondrain</dt>
-        <dd>Event handler that corresponds to the <code>drain</code> event, which 
-            is fired upon detection that previously-buffered data has been written 
-            to the network and it is possible to buffer more data received from 
-            the application.  </dd>   
-         
-        <dt>attribute EventHandler onopen</dt>
-        <dd>Event handler that corresponds to the <code>open</code> event, which 
-            is fired when the socket is open and the connection to the server has 
-            been established. If the creation of the socket fails and/or the 
-            connection is refused, the <code>error</code> event will be fired 
-            instead.</dd>       
+            details.</dd>  
             
-        <dt>attribute EventHandler onclose</dt>
-        <dd>Event handler that corresponds to the <code>close</code> event, which 
-            is fired when the connection to the server has been closed, either
-            cleanly by the server, or cleanly by the client calling close(), 
-            or if the connection was lost. If the connection was lost, the 
-            <code>error</code> event will be fired prior to the <code>close</code>
-            event.</dd>                                    
-            
-        <dt>attribute EventHandler onerror</dt>
-        <dd>Event handler that corresponds to the <code>error</code> event, which 
-            is fired when there is an error. The error attribute of the event 
-            passed to the onerror handler will have a description of the kind of 
-            error. If <code>error</code> is fired before <code>open</code>, 
-            the error was socket creation error or connection refused, and 
-            the <code>close</code> event will not be fired. If <code>error</code> 
-            is fired after <code>open</code>, the connection was lost, and 
-            <code>close</code> will be fired after <code>error</code>.</dd>              
-
-        <dt>attribute EventHandler ondata</dt>
-        <dd>Event handler that corresponds to the <code>data</code> event, 
-            which is fired repeatedly and asynchronously after the TCPSocket object 
-            has been created, every time TCP data has been received and was 
-            read. At any time, the client may choose to pause reading and 
-            receiving ondata callbacks, by calling the socket's suspend() 
-            method. Further invocations of ondata will be paused until resume() 
-            is called.</dd>  
+        <dt> readonly attribute Promise opened</dt>
+        <dd> Detects the result of the TCP connection attempt with the remote 
+             peer. Returns the <code>openedPromise</code> that was created 
+             in the <code>TCPSocket</code> constructor.    
+        </dd>           
         
-        <dt> void close()</dt>
+        <dt> readonly attribute Promise closed</dt>
+        <dd> Detects when the TCP connection has been closed, either cleanly 
+             (initiated either by the server, or by the client application 
+             calling <code>socketClose()</code>) or through an error situation.
+             Returns the <code>closedPromise</code> that was created 
+             in the <code>TCPSocket</code> constructor.    
+        </dd>            
+         
+        <dt>readonly attribute ReadableStream output</dt>
+        <dd>The object that represents the TCP socket's source of data, from which 
+            you can read. In other words, data from the TCP connection comes 
+            out of this readable stream object. [[!STREAMS]] </dd>     
+            
+        <dt>readonly attribute WriteableStream input</dt>
+        <dd>The object that represents the TCP socket's destination for data, 
+            into which you can write. In other words, data to be sent on the 
+            TCP connection goes in to this writable stream object. 
+            [[!STREAMS]] </dd>               
+
+        <dt> void socketClose()</dt>
         <dd>        
           <p>Closes the TCP socket.</p>        
-        </dd>  
+        </dd>   
         
-        <dt> void halfclose()</dt>
+        <dt> void socketHalfClose()</dt>
         <dd>        
-          <p>"Halfcloses" the TCP socket. This means that FIN is sent and that 
-          the socket no longer can be used to send data. However, receiving is still
-          possible.</p>        
-        </dd>          
-
-        <dt> void suspend()</dt>
-        <dd>        
-          <p>Pause reading incoming TCP data and invocations of the 
-          <code>ondata</code> handler until resume is called.</p>        
-        </dd>    
-        
-        <dt> void resume()</dt>
-        <dd>        
-          <p>Resume reading incoming TCP data and invoking <code>ondata</code> 
-             as usual.</p>        
-        </dd>                            
-        
-        <dt> boolean send()</dt>
-        <dd>        
-          <p>Sends data on the given connected TCP socket.</p>               
-        
-          <dl class='parameters'>
-
-             <dt>(DOMString or Blob or ArrayBuffer or ArrayBufferView) data</dt>
-             <dd>
-               The data to write in one of the alternative representations as
-               stated below: <br/>
-               <ul>
-                 <li> Represented as a sequence of Unicode characters. [[!UNICODE]].
-                 <li> As raw data represented by the Blob object. [[!FILE-API]] 
-                 <li> Represented as an ArrayBuffer object. [[!TYPED-ARRAYS]]
-                 <li> Represented by the section of the buffer described by the 
-                      ArrayBuffer object that the ArrayBufferView object references.
-                      [[!TYPED-ARRAYS]].    
-               </ul>           
-             </dd>  
-                     
-          </dl>
-                   
-        </dd>                                                        
+          <p>Half closes the TCP socket.</p>        
+        </dd>                                                                    
                             
       </dl>          
       
       <p>When the <a>TCPSocket</a> constructor is invoked, the User Agent MUST 
          run the following steps:        
         <ol>
+         <li>Create a new TCPSocket object ("<code>mySocket</code>").
          <li>If the <code>remoteAddress</code> argument is not a valid IPv4/6 
              address and/or the <code>remotePort</code> argument is not a valid 
-             port number then throw DOMException <code>InvalidAccessError</code> 
-             and abort these steps, else set the <code>remoteAddress</code> 
-             and <code>remotePort</code> attributes to the requested values.
+             port number then throw DOMException <code>INVALID_ACCESS_ERR</code> 
+             and abort the remaining steps, else set the <code>mySocket.remoteAddress</code> 
+             and <code>mySocket.remotePort</code> attributes to the requested values.
          <li>If the <code>options</code> argument's <code>localAddress</code> 
              member is present and it is a valid IPv4/6 address for a local
              interface that can be used to connect to the selected 
              <code>remoteAddress</code> (according to the routing table) bind the 
-             socket to this local IPv4/6 address and set the <code>localAddress</code> 
+             socket to this local IPv4/6 address and set the <code>mySocket.localAddress</code> 
              attribute to this addres. Else, if the <code>localAddress</code> 
              member is present but it is not a valid local IPv4/6 address for a 
              local interface that can be used to connect to the selected 
              <code>remoteAddress</code> then throw DOMException 
-             <code>InvalidAccessError</code> and abort these steps.<br/>
+             <code>INVALID_ACCESS_ERR</code> and abort the remaining steps.<br/>
              Otherwise, if the <code>options</code> argument's <code>localAddress</code> 
              member is absent, execute the following steps: 
              <ol>
@@ -996,284 +988,241 @@ Style guide to contributors:
                     can be used to connect to the selected <code>remoteAddress</code>. 
                     If no local interface can be used to connect to the selected 
                     <code>remoteAddress</code> then throw DOMException 
-                    <code>InvalidAccessError</code> and abort these steps.
+                    <code>INVALID_ACCESS_ERR</code> and abort the remaining 
+                    steps.
                <li> If the routing table states that more than one local interface 
                     can be used to connect to the selected <code>remoteAddress</code>
                     bind the socket to the IPv4/6 address of the "default" local 
                     interface to use for the selected <code>remoteAddress</code>. 
                     The selection of a "default" local interface is out of scope 
                     for this specification.
-               <li> Set the <code>localAddress</code> attribute to the local address 
-                    that the socket is bound to.             
+               <li> Set the <code>mySocket.localAddress</code> attribute to the 
+                    local address that the socket is bound to.             
              </ol>             
          <li>If the <code>options</code> argument's <code>localPort</code> member 
              is absent then bind the socket to an ephemeral local port decided 
-             by the system and set the <code>localPort</code> attribute to this 
-             port. 
+             by the system and set the <code>mySocket.localPort</code> attribute 
+             to this port. 
              Otherwise, bind the socket to the requested local port and set the 
-             <code>localPort</code> attribute to the local port that the 
-             socket is bound to.             
-         <li>Set the <code>addressReuse</code> attribute to the value of the
-             <code>options</code> argument's <code>addressReuse</code> member 
-             if it is present or to <code>true</code> if the <code>options</code> 
+             <code>mySocket.localPort</code> attribute to the local port that 
+             the socket is bound to.             
+         <li>Set the <code>mySocket.addressReuse</code> attribute to the value 
+             of the <code>options</code> argument's <code>addressReuse</code> 
+             member if it is present or to <code>true</code> if the <code>options</code> 
              argument's <code>addressReuse</code> member is not present.
-         <li>Set the <code>noDelay</code> attribute to the value of the
-             <code>options</code> argument's <code>noDelay</code> member 
+         <li>Set the <code>mySocket.noDelay</code> attribute to the value of 
+             the <code>options</code> argument's <code>noDelay</code> member 
              if it is present or to <code>true</code> if the <code>options</code> 
              argument's <code>noDelay</code> member is not present.             
-         <li>Set the <code>readyState</code> attribute to "opening".    
-         <li>Set the <code>bufferedAmount</code> attribute to 0.             
-         <li>Attempt to connect to the requested address and port in the 
-             background (without blocking scripts).       
-         <li>Return the newly created <a>TCPSocket</a> object to the application.
+         <li>Set the <code>mySocket.readyState</code> attribute to "opening".          
+         <li>Create a new promise, "<code>openedPromise</code>", and store 
+             it so it can later be returned by the <code>opened</code> 
+             property.    
+         <li>Create a new promise, "<code>closedPromise</code>", and store 
+             it so it can later be returned by the <code>closed</code> 
+             property.               
+         
+         <li>Let the <code>mySocket.output</code> attribute be a new 
+             ReadableStream object, [[!STREAMS]]. The User Agent MUST implement 
+             the adaptation layer to [[!STREAMS]] for this new ReadableStream 
+             object through implementation of a number of functions that are 
+             given as input arguments to the constructor and called by the 
+             [[!STREAMS]] implementation. The semantics for these 
+             functions are described below:
+
+             <ul> 
+               <li>The constructor's <code>start()</code> function is called 
+                   immediately by the [[!STREAMS]] implementation. 
+                   The <code>start()</code> function MUST run the following steps:
+                   <ol>
+                     <li>A TCP connection setup handshake to the requested 
+                         address and port MUST be performed in the background 
+                         (without blocking scripts). 
+                     <li>When the TCP connection has been successfully established 
+                         the following steps MUST run:      
+                       <ol>
+                         <li>Change the <code>readyState</code> attribute's value to 
+                             "open".    
+                         <li>Resolve <code>openedPromise</code> with <code>undefined</code>.
+                       </ol>
+                   </ol>                       
+                   The following functions are arguments of the constructor's 
+                   <code>start()</code> function and MUST be called by the 
+                   <code>start()</code> function implementation according to the
+                   following steps:
+                   <ul>                     
+                     <li>The <code>push()</code> argument of <code>start()</code> 
+                         is a function that pushes received data into the 
+                         internal buffer. <br>
+                         When new TCP data is received the following steps MUST 
+                         run:
+                         <ol>
+                           <li>If it is not possible to convert the received 
+                               TCP data to <code>ArrayBuffer</code>, 
+                               [[!TYPED-ARRAYS]], then reject 
+                               <code>openedPromise</code> with TypeError and
+                               abort the remaining steps.     
+                           <li>Create a new read-only <code>ArrayBuffer</code> 
+                               object whose contents are the received TCP data.
+                           <li>Call <code>push()</code> to push the
+                               <code>ArrayBuffer</code> into the internal 
+                               [[!STREAMS]] receive buffer. 
+                           <li>If the high watermark of the buffer is reached 
+                               <code>push()</code> returns false and the TCP 
+                               flow control MUST be used to stop the data 
+                               transmission from the remote peer.          
+                         </ol>                                                           
+                     <li>The <code>close()</code> argument of <code>start()</code> 
+                         is a function that closes the readable stream.<br> 
+                         Upon detection that the TCP connection has been closed
+                         cleanly (initiated either by the server, or by 
+                         the client application calling <code>socketClose()</code>) 
+                         through a successful TCP connection closing handshake 
+                         the following steps MUST run:      
+                         <ol>  
+                           <li>Call <code>close()</code>.  
+                           <li>Set the <code>readyState</code> attribute's 
+                               value to "closed".  
+                           <li>Resolve <code>closedPromise</code> with 
+                               <code>undefined</code>.       
+                         </ol> 
+                      <li>The <code>error()</code> argument of <code>start()</code> 
+                          is a function that handles readable stream errors and 
+                          closes the readble stream.<br> 
+                          Upon detection that the attempt to 
+                          create a new TCP socket and establish a new TCP 
+                          connection (<code>readyState</code> is "opening") has 
+                          failed the following steps MUST run:      
+                          <ol>                                                 
+                            <li>Call <code>error()</code>.
+                            <li>Reject <code>openedPromise</code> with DOMException 
+                                <code>NETWORK_ERR</code>.   
+                            <li>Reject <code>closedPromise</code> with DOMException 
+                                <code>NETWORK_ERR</code>.             
+                            <li>Change the <code>readyState</code> attribute's value 
+                                to "closed".                               
+                          </ol> 
+                          Upon detection that the established TCP connection 
+                          (<code>readyState</code> is "open") has been lost 
+                          the following steps MUST run:      
+                          <ol>                                                 
+                            <li>Call <code>error()</code>. 
+                            <li>Reject <code>closedPromise</code> with DOMException 
+                                <code>NETWORK_ERR</code>.                                                                  
+                            <li>Change the <code>readyState</code> attribute's value 
+                                to "closed".                               
+                          </ol>   
+                          Upon detection that the TCP connection closing
+                          handshake failed (<code>readyState</code> is "closing")
+                          has failed the following steps MUST run:      
+                          <ol>                                                 
+                            <li>Call <code>error()</code>.  
+                            <li>Reject <code>closedPromise</code> with DOMException 
+                                <code>NETWORK_ERR</code>.                                      
+                            <li>Change the <code>readyState</code> attribute's value 
+                                to "closed".                               
+                          </ol>   
+                   </ul>                  
+                 <li>The constructor's <code>pull()</code> function is called 
+                     by the [[!STREAMS]] implementation if the internal buffer 
+                     has been emptied, but the stream's consumer still wants more 
+                     data. 
+                     The <code>pull()</code> function MUST run the following steps:
+                     <ol>
+                       <li>The function MUST resume receiving TCP data through the 
+                           TCP flow control mechanism.  
+                     </ol>                       
+                 <li>The constructor's <code>cancel()</code> function input 
+                     argument is called by the [[!STREAMS]] implementation when 
+                     the ReadbleStream should be canceled. For TCP this means that
+                     the TCP connection should be terminated.
+                     The <code>cancel()</code> function MUST run the following steps:  
+                     <ol>
+                       <li>If <code>readyState</code> is "closing" or "closed" then 
+                           do nothing and abort the remaning steps.    
+                       <li>If <code>readyState</code> is "opening" then fail the 
+                           connection attempt, reject <code>openedPromise</code>
+                           with DOMException <code>ABORT_ERR</code> and set the 
+                           <code>readyState</code> attribute to "closing".
+                       <li>If <code>readyState</code> is "open" initiate TCP 
+                           closing handshake and set the <code>readyState</code> 
+                           attribute to "closing".        
+                     </ol>                   
+             </ul>                   
+                    
+         <li>Let the <code>mySocket.input</code> attribute be a new 
+             WritableStream object, [[!STREAMS]]. The User Agent MUST implement 
+             the adaptation layer to [[!STREAMS]] for this new WritableStream 
+             object through implementation of a number of functions that are 
+             given as input arguments to the constructor and called by the 
+             [[!STREAMS]] implementation. The semantics for these 
+             functions are described below:
+                          
+             <ul> 
+               <li>The constructor's <code>start()</code> function MUST be
+                   omitted as the TCP connection establishment is performed
+                   in the <code>mySocket.output</code> attribute constructor's 
+                   <code>start()</code> function.                     
+               <li>The constructor's <code>write(data, done, error)</code> 
+                   function is called by the [[!STREAMS]] implementation to write data to the remote peer on the 
+                   TCP connection.
+                   The <code>write()</code> function MUST run the following steps:
+                   <ol>
+                     <li>Send TCP data with data passed in the <code>data</code>
+                         parameter to the address and port of the recipient as 
+                         stated by the TCPSocket object constructor's 
+                         <code>remoteAddress</code> and <code>remotePort</code> 
+                         fields. <br>
+                         The following functions are arguments of the constuctor's 
+                         <code>write()</code> function and MUST be called by the 
+                         <code>write()</code> function implementation:
+                         <ul>
+                           <li>The <code>done()</code> argument of <code>write()</code> 
+                               is a function that MUST be called when the 
+                               buffered data has been sent to the remote peer  
+                               the underlying resource is ready for more data. 
+                           <li>The <code>error(errorReason)</code> argument of <code>write()</code> 
+                               is a function that MUST be called if an error 
+                               ocurred during writing. (<code>errorReason</code>
+                               TBD).                         
+                         </ul>                  
+                   </ol>                           
+               <li>The constructor's <code>close()</code> 
+                   function is called by the [[!STREAMS]] implementation to close the writable side 
+                   of the connection, that is a TCP "half close" is performed.
+                   The <code>close()</code> function MUST run the following steps:
+                    <ol>
+                     <li>If <code>readyState</code> is "closing" or "closed" then 
+                         do nothing.
+                     <li>If <code>readyState</code> is "opening" then complete 
+                         the connection attempt. If succesful send FIN and set the 
+                         <code>readyState</code> attribute to "halfclosed".
+                     <li>If <code>readyState</code> is "open" then send FIN and 
+                         set the <code>readyState</code> attribute to "halfclosed".                     
+                   </ol>
+ 
+             </ul>                                         
+                                  
+         <li>Return the newly created <a>TCPSocket</a> object ("<code>mySocket</code>") 
+             to the application.
         </ol>
-      </p>                             
-      
-      <p> The <dfn><code>send</code></dfn> method when invoked MUST run the 
+      </p>                               
+    
+      <p> The <dfn><code>socketClose()</code></dfn> method when invoked MUST run the 
           following steps:
         <ol>
-         <li>If <code>readyState</code> is not "open" throw DOMException 
-             <code>InvalidStateError</code> and abort these steps.
-         <li>If the internal "IgnoreAllSendCalls" flag is set then abort these 
-             steps.
-         <li>If the data cannot be sent, e.g. because it would need to be 
-             buffered but the buffer is full or because there is some error
-             in the underlying protocol, the user agent MUST set an internal 
-             "IgnoreAllSendCalls" flag and <a>queue a task</a> that executes
-             the following substeps and then abort the following steps:
-             <ol>
-               <li>Change the <code>readyState</code> attribute's value to 
-                   "closed".   
-               <li>Create a new instance of <a>SocketErrorEvent</a>.     
-               <li>Set the <code>error.name</code> attribute of the 
-                   <a>SocketErrorEvent</a> object to "NetworkError".   
-               <li>Set the <code>error.type</code> attribute of the 
-                   <a>SocketErrorEvent</a> object to the appropriate
-                   error type. See enum <a>SocketErrorType</a>.                        
-               <li>Set the <code>error.message</code> attribute of the 
-                  <a>SocketErrorEvent</a> object to an informative message 
-                  stating the reason for the error.                           
-               <li><a>fire an event</a> named <code><a>error</a></code> with the 
-                  newly created <code>SocketErrorEvent</code> instance at the 
-                  <a>TCPSocket</a> object.    
-               <li><a>fire an event</a> named <code><a>close</a></code> at the 
-                  <a>TCPSocket</a> object.               
-             </ol>  
-         <li>Make a request to the system to send TCP data with data passed in 
-             the <code>data</code> parameter to the address and port of the 
-             recipient as stated by the TCPSocket object constructor's 
-             <code>remoteAddress</code> and <code>remotePort</code> fields.              
-         <li>When the request has been completed set the return value of the 
-             method to <code>true</code> or <code>false</code> as a hint to the 
-             caller that they may either continue sending more data immediately, 
-             or should want to wait until the transport layer has transmitted 
-             buffered data that already have been written to the socket before 
-             buffering more. When less than an implementation specific value has 
-             been buffered and it's safe to immediately write more set the return 
-             value to <code>true</code>. When more than an implementation specific 
-             value has been buffered set the return value to <code>false</code>. 
-             This means that the caller should wait before buffering more data by 
-             more calls to <dfn><code>send</code></dfn> until the <code>ondrain</code> 
-             event handler has been called.
-         <li>Any invocation of this method that does not throw an exception must 
-             increase the <code>bufferedAmount</code> attribute.
-           <ul>
-            <li>If the send data argument is <code>DOMString</code> the 
-                <code>bufferedAmount</code> attribute is increased by the number 
-                of bytes needed to express the argument as UTF-8. [[!UNICODE]] [[!UTF-8]]
-            <li>If the send data argument is <code>Blob</code> the 
-                <code>bufferedAmount</code> attribute is increased by the size of 
-                the <code>Blob</code> object's raw data, in bytes. [[!FILE-API]]      
-            <li>If the send data argument is <code>ArrayBuffer</code> the 
-                <code>bufferedAmount</code> attribute is increased by the length 
-                of the <code>ArrayBuffer</code> in bytes. [[!TYPED-ARRAYS]]                              
-            <li>If the send data argument is <code>ArrayBufferView</code> the 
-                <code>bufferedAmount</code> attribute is increased by the length 
-                of the <code>ArrayBufferView</code> in bytes. [[!TYPED-ARRAYS]]
-           </ul> 
+          <li>Call <code>mysocket.output.cancel(reason)</code>. (Reason codes TBD.)  
         </ol>
-      </p>    
+      </p>   
       
-      <p> The <dfn><code>close</code></dfn> method when invoked MUST run the 
+      <p> The <dfn><code>socketHalfClose()</code></dfn> method when invoked MUST run the 
           following steps:
         <ol>
-         <li>If <code>readyState</code> is "closing" or "closed" then do nothing.
-         <li>If <code>readyState</code> is "opening" then fail the connection 
-             attempt and set the <code>readyState</code> attribute to "closing".
-         <li>If <code>readyState</code> is "open" close the connection and set 
-             the <code>readyState</code> attribute to "closing".         
+         <li>Call <code>mysocket.input.close()</code>.            
         </ol>
-      </p>        
+      </p>                     
+      
 
-      <p> The <dfn><code>halfclose</code></dfn> method when invoked MUST run the 
-          following steps:
-        <ol>
-         <li>If <code>readyState</code> is "closing" or "closed" then do nothing.
-         <li>If <code>readyState</code> is "opening" then complete the 
-             connection attempt. If succesful send FIN and set the <code>readyState</code> 
-             attribute to "halfclosed".
-         <li>If <code>readyState</code> is "open" then send FIN and set the 
-             <code>readyState</code> attribute to "halfclosed".         
-        </ol>
-      </p>    
-      
-      <p>When a new TCP connection has been successfully established the 
-         <a>user agent</a> MUST run the following steps:
-      
-        <ol>
-          <li>Change the <code>readyState</code> attribute's value to "open".    
-          <li><a>queue a task</a> to <a>fire an event</a> named 
-              <code><a>open</a></code> at the <a>TCPSocket</a> object.
-        </ol>
-      </p>      
-      
-      <p>When the attempt to create a new TCP socket and establish a new TCP 
-         connection (<code>readyState</code> is "opening") has failed the 
-         <a>user agent</a> MUST run the following steps:
-      
-        <ol>
-          <li>Change the <code>readyState</code> attribute's value to "closed".  
-          <li>Create a new instance of <a>SocketErrorEvent</a>.  
-          <li>Set the <code>error.name</code> attribute of the <a>SocketErrorEvent</a> 
-              object to "NetworkError".    
-          <li>Set the <code>error.type</code> attribute of the 
-              <a>SocketErrorEvent</a> object to the appropriate
-              error type. See enum <a>SocketErrorType</a>.                            
-          <li>Set the <code>error.message</code> attribute of the 
-              <a>SocketErrorEvent</a> object to an informative message 
-              stating the reason for the error.        
-          <li><a>queue a task</a> to <a>fire an event</a> named 
-              <code><a>error</a></code> with the newly created <a>SocketErrorEvent</a> 
-              instance at the <a>TCPSocket</a> object.
-        </ol>         
-      </p>     
-      
-      <p>When an established TCP connection (<code>readyState</code> is "open") 
-         is lost the <a>user agent</a> MUST run the following steps:
-      
-        <ol>
-          <li>Change the <code>readyState</code> attribute's value to "closed".   
-          <li>Create a new instance of <a>SocketErrorEvent</a>.     
-          <li>Set the <code>error.name</code> attribute of the <a>SocketErrorEvent</a> 
-              object to "NetworkError". 
-          <li>Set the <code>error.type</code> attribute of the 
-              <a>SocketErrorEvent</a> object to the appropriate
-              error type. See enum <a>SocketErrorType</a>.              
-          <li>Set the <code>error.message</code> attribute of the 
-              <a>SocketErrorEvent</a> object to an informative message 
-              stating the reason for the error.                         
-          <li><a>queue a task</a> to <a>fire an event</a> named <code><a>error</a></code> 
-              with the newly created <code>SocketErrorEvent</code> instance at the 
-              <a>TCPSocket</a> object.    
-          <li><a>queue a task</a> to <a>fire an event</a> named <code><a>close</a></code> 
-              at the <a>TCPSocket</a> object.                       
-        </ol>
-      </p>            
-      
-      <p>Upon new TCP data being received, the <a>user agent</a> MUST run 
-         the following steps:
-      
-        <ol>
-          <li>If it is not possible to convert the received TCP data to 
-              <code>ArrayBuffer</code>, [[!TYPED-ARRAYS]], then:   
-            <ol>
-              <li>Create a new instance of <a>SocketErrorEvent</a>. 
-              <li>Set the <code>error.name</code> attribute of the 
-                  <a>SocketErrorEvent</a> object to "NetworkError".  
-              <li>Set the <code>error.type</code> attribute of the 
-                  <a>SocketErrorEvent</a> object to the appropriate
-                  error type. See enum <a>SocketErrorType</a>.                   
-              <li>Set the <code>error.message</code> attribute of the 
-                  <a>SocketErrorEvent</a> object to an informative message 
-                  stating the reason for the error.                  
-              <li><a>queue a task</a> to <a>fire an event</a> named 
-                  <code><a>error</a></code> with the newly created 
-                  <code>SocketErrorEvent</code> instance 
-                     at the <a>TCPSocket</a> object.    
-              <li>Abort these steps.            
-            </ol>          
-          <li>Create a new instance of <code>MessageEvent</code>, [[!POSTMSG]].
-          <li>Initialize the <code>MessageEvent</code> object's data attribute 
-              to a new read-only <code>ArrayBuffer</code> object whose 
-              contents are the received TCP data [[!TYPED-ARRAYS]].             
-          <li><a>queue a task</a> to <a>fire an event</a> named 
-              <code><a>data</a></code> with the newly created 
-              <code>MessageEvent</code> instance at the <a>TCPSocket</a> object.
-        </ol>
-        <p>
-          Note: It is up to the implementation the define how often the 
-          <code><a>data</a></code> event will be issued and how much data that 
-          will be delivered to the application with each <a>MessageEvent</a> 
-          instance.
-        </p>         
-      </p>       
-      
-      <p>In the process of sending TCP data, upon a detection that previously-buffered 
-         data has been written to the network and it is possible to buffer more 
-         data received from the application, the <a>user agent</a> MUST:  
-      
-        <ol>    
-          <li><a>queue a task</a> to <a>fire an event</a> named 
-          <code><a>drain</a></code> at the <a>TCPSocket</a> object. 
-        </ol>
-      </p>      
-      
-      <p>When a TCP connection has been closed cleanly, either by the server, 
-        or by the client calling <code>close()</code> the <a>user agent</a> 
-        MUST run the following steps:      
-        <ol>
-          <li>Set the <code>readyState</code> attribute's value to "closed".    
-          <li><a>queue a task</a> to <a>fire an event</a> named 
-              <code><a>close</a></code> at the <a>TCPSocket</a> object.
-        </ol>
-      </p>           
-
-      <section>
-        <h2>Event handlers</h2>
-        <p>The following are the <a>event handlers</a> (and their corresponding 
-           <a>event handler event types</a>) that MUST be supported as attributes 
-           by the <a>TCPSocket</a> object.</p>
-        
-        <table class="simple">
-          <thead>
-            <tr>
-              <th>event handler</th>
-              <th>event handler event type</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong><code>ondata</code></strong></td>
-              <td><code><dfn>data</dfn></code></td>
-            </tr>                       
-            <tr>
-              <td><strong><code>ondrain</code></strong></td>
-              <td><code><dfn>drain</dfn></code></td>
-            </tr>     
-            <tr>
-              <td><strong><code>onopen</code></strong></td>
-              <td><code><dfn>open</dfn></code></td>
-            </tr>      
-            <tr>
-              <td><strong><code>onclose</code></strong></td>
-              <td><code><dfn>close</dfn></code></td>
-            </tr>                                                       
-            <tr>
-              <td><strong><code>onerror</code></strong></td>
-              <td><code><dfn>error</dfn></code></td>
-            </tr>                           
-          </tbody>                    
-        </table>
-
-        <p>The <code>data</code> event MUST implement the 
-           <code>MessageEvent</code> interface, [[!POSTMSG]]. The event's data 
-           attribute is intialized to a new read-only <code>ArrayBuffer</code> 
-           object whose contents are the recieved TCP data. [[!TYPED-ARRAYS]]</p>  
-        <p>The <code>error</code> event MUST implement the 
-           <a>SocketErrorEvent</a> interface. </p>                  
-
-      </section>
-          
     </section>             
     
 <!------------------------ Interface TCPServerSocket ------------------------------>    
