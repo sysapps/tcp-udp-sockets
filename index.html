@@ -177,7 +177,8 @@ Style guide to contributors:
         <p>
           When using promises rejection reasons should always be instances of 
           the ECMAScript Error type such as DOMException or the built in 
-          ECMAScript error types. See <a href="https://github.com/w3ctag/promises-guide#rejection-reasons-should-be-errors">Promise tejection reasons</a>.
+          ECMAScript error types. See 
+          <a href="https://github.com/w3ctag/promises-guide#rejection-reasons-should-be-errors">Promise rejection reasons</a>.
           In the TCP and UDP Socket API specification we need a better granularity 
           of machine readable errors and therefore the <a>SocketError</a> 
           interface was added. This interface extends DOMError with a 
@@ -329,11 +330,14 @@ Style guide to contributors:
         function receiveMSearchResponses() {         
         
           // While data in buffer, read and log UDP message
-          while (readable.readableState === "readable") {            
-            var msg = mySocket.output.read());
-            console log ('Remote address: ' + msg.remoteAddress + 
+          while (mySocket.readableState === "readable") {            
+            var msg = mySocket.output.read();
+            console.log ('Remote address: ' + msg.remoteAddress + 
                          ' Remote port: ' + msg.remotePort + 
                          'Message: ' + ab2str(msg.data)); 
+              // ArrayBuffer to string conversion could also be done by piping 
+              // through a transform stream. To be updated when the Streams API
+              // specification has been stabilized on this point. 
           }  
               
           // Wait for SSDP M-SEARCH responses to arrive     
@@ -382,7 +386,7 @@ Style guide to contributors:
          
 
       <dl title="[Constructor (optional UDPOptions options)] 
-                 interface UDPSocket : EventTarget"
+                 interface UDPSocket"
           class="idl">                           
 
         <dt>readonly attribute DOMString localAddress</dt>
@@ -651,10 +655,16 @@ Style guide to contributors:
                            <li>Call <code>push()</code> to push the
                                <a>UDPMessage</a> object into the internal 
                                [[!STREAMS]] receive buffer. 
-                           <li>If the high watermark of the buffer is reached 
-                               <code>push()</code> returns false then stop 
-                               pushing <a>UDPMessage</a> objects into the 
-                               internal [[!STREAMS]] receive buffer.         
+                               Note that <code>push()</code> returns false if 
+                               the high watermark of the buffer is reached.
+                               However, as there is no flow control mechanism
+                               in UDP the flow of datagrams can't be stopped.
+                               The <code>push()</code> return value should 
+                               therefore be ignored. This means that datagrams
+                               will be lost if the internal receive buffer 
+                               has been filled to it's memory limit but
+                               this is the nature of an unreliable protocol
+                               as UDP.         
                          </ol>                                                                               
                       <li>The <code>error()</code> argument of <code>start()</code> 
                           is a function that handles readable stream errors and 
@@ -672,7 +682,8 @@ Style guide to contributors:
                             <li>Reject <code>closedPromise</code> with DOMException 
                                 <code>"NetworkError"</code>.             
                             <li>Change the <code>mySocket.readyState</code> 
-                                attribute's value to "closed".                               
+                                attribute's value to "closed" and release any 
+                                underlying resources associated with this socket.                                                               
                           </ol> 
                           Upon detection that there is an error with the 
                           established UDP socket (<code>mySocket.readyState</code> 
@@ -684,7 +695,9 @@ Style guide to contributors:
                             <li>Reject <code>closedPromise</code> with 
                                 DOMException <code>"NetworkError"</code>.                                                                  
                             <li>Change the <code>mySocket.readyState</code> 
-                                attribute's value to "closed".                               
+                                attribute's value to "closed" and release any 
+                                underlying resources associated with this 
+                                socket.                               
                           </ol>   
                           When a new UDP datagram has been received and upon 
                           detction that it is not possible to convert the 
@@ -695,20 +708,15 @@ Style guide to contributors:
                             <li>Reject <code>closedPromise</code> with 
                                 <code>TypeError</code>.                                                                  
                             <li>Change the <code>mySocket.readyState</code> 
-                                attribute's value to "closed". 
+                                attribute's value to "closed" and release any 
+                                underlying resources associated with this 
+                                socket. 
                           </ol>                        
                            
                    </ul>                  
-                 <li>The constructor's <code>pull()</code> function is called 
-                     by the [[!STREAMS]] implementation if the internal buffer 
-                     has been emptied, but the stream's consumer still wants 
-                     more data. 
-                     The <code>pull()</code> function MUST run the following steps:
-                     <ol>
-                       <li>The function MUST resume receiving UDP datagrams 
-                           through pushing <a>UDPMessage</a> objects into the 
-                           internal [[!STREAMS]] receive buffer.  
-                     </ol>                       
+                 <li>The constructor's <code>pull()</code> function MUST be omitted
+                     as there is no flow control mechanism in UDP and the flow
+                     of datagrams cannot be stopped and started again.                      
                  <li>The constructor's <code>cancel()</code> function input 
                      argument is called by the [[!STREAMS]] implementation when 
                      the ReadbleStream should be canceled. For UDP this means that
@@ -724,15 +732,14 @@ Style guide to contributors:
                        <li>If <code>mySocket.readyState</code> is "open" the the 
                            following steps MUST run:
                            <ol>  
-                             <li>Call the Writeable and ReadableStream's internal 
-                                 <code>close()</code> methods to assure that 
-                                 any buffered send data is sent and that any
-                                 buffered read data is retrieved before
-                                 closing the socket.  
+                             <li>Call <code>mySocket.input.close()</code> to 
+                                 assure that any buffered send data is sent.  
                              <li>Set the <code>mySocket.readyState</code> 
                                  attribute's value to "closed".  
                              <li>Resolve <code>closedPromise</code> with 
-                                 <code>undefined</code>.       
+                                 <code>undefined</code> and release any 
+                                underlying resources associated with this 
+                                socket.    
                            </ol>       
                      </ol>                   
              </ul>                   
@@ -752,10 +759,12 @@ Style guide to contributors:
                    <code>start()</code> function.                     
                <li>The constructor's <code>write(data, done, error)</code> 
                    function is called by the [[!STREAMS]] implementation to 
-                   write UDP data. The <code>data</code> argument must be an
-                   instance of <a>UDPMesssage</a>. The <code>write()</code> 
+                   write UDP data. The <code>write()</code> 
                    function MUST run the following steps:
                    <ol>  
+                     <li>Let the <code>data</code> argument be the result of 
+                         converting data to an <a>UDPMessage</a> (per 
+                         [[!WEBIDL]] dictionary conversion).
                      <li>If no default remote address was specified in the 
                          UDPSocket's constructor <code>options</code> argument's 
                          <code>remoteAddress</code> member and the 
@@ -781,7 +790,7 @@ Style guide to contributors:
                          member if present, else the destination port
                          is defined by the UDPSocket's constructor 
                          <code>options</code> argument's 
-                         <code>remotePOrt</code> member.                        
+                         <code>remotePort</code> member.                        
                   </ol>       
                       The following functions are arguments of the constructor's 
                       <code>write()</code> function and MUST be called by the 
@@ -1072,7 +1081,8 @@ Style guide to contributors:
                          <ol>  
                            <li>Call <code>close()</code>.  
                            <li>Set the <code>mySocket.readyState</code> attribute's 
-                               value to "closed".  
+                               value to "closed" and release any 
+                               underlying resources associated with this socket.  
                            <li>Resolve <code>closedPromise</code> with 
                                <code>undefined</code>.       
                          </ol> 
@@ -1091,7 +1101,8 @@ Style guide to contributors:
                             <li>Reject <code>closedPromise</code> with DOMException 
                                 <code>"NetworkError"</code>.             
                             <li>Change the <code>mySocket.readyState</code> attribute's value 
-                                to "closed".                               
+                                to "closed" and release any underlying resources 
+                                associated with this socket.                               
                           </ol> 
                           Upon detection that the established TCP connection 
                           (<code>mySocket.readyState</code> is "open") has been lost 
@@ -1101,8 +1112,10 @@ Style guide to contributors:
                                 <code>"NetworkError"</code>. 
                             <li>Reject <code>closedPromise</code> with DOMException 
                                 <code>"NetworkError"</code>.                                                                  
-                            <li>Change the <code>mySocket.readyState</code> attribute's value 
-                                to "closed".                               
+                            <li>Change the <code>mySocket.readyState</code> 
+                                attribute's value to "closed" and release any 
+                                underlying resources associated with this 
+                                socket.                               
                           </ol>   
                           Upon detection that the TCP connection closing
                           handshake failed (<code>mySocket.readyState</code> is "closing")
@@ -1112,8 +1125,9 @@ Style guide to contributors:
                                 <code>"NetworkError"</code>.  
                             <li>Reject <code>closedPromise</code> with DOMException 
                                 <code>"NetworkError"</code>.                                      
-                            <li>Change the <code>mySocket.readyState</code> attribute's value 
-                                to "closed".                               
+                            <li>Change the <code>mySocket.readyState</code> 
+                                attribute's value to "closed" and release any 
+                                underlying resources associated with this socket.                               
                           </ol>   
                           When new TCP data has been received and upon 
                           detction that it is not possible to convert the 
@@ -1124,7 +1138,8 @@ Style guide to contributors:
                             <li>Reject <code>closedPromise</code> with 
                                 <code>TypeError</code>.                                                                  
                             <li>Change the <code>mySocket.readyState</code> 
-                                attribute's value to "closed". 
+                                attribute's value to "closed" and release any 
+                                underlying resources associated with this socket. 
                           </ol>     
                    </ul>                  
                  <li>The constructor's <code>pull()</code> function is called 
@@ -1151,11 +1166,9 @@ Style guide to contributors:
                        <li>If <code>mySocket.readyState</code> is "open" then the 
                            following steps MUST run:
                            <ol>  
-                             <li>Call the Writeable and ReadableStream's internal 
-                                 <code>close()</code> methods to assure that 
-                                 any buffered send data is sent and that any
-                                 buffered read data is retrieved before
-                                 closing the socket.  
+                             <li>Call <code>mySocket.input.close()</code> to 
+                                 assure that any buffered send data is sent 
+                                 before closing the socket.  
                              <li>Set the <code>mySocket.readyState</code> 
                                  attribute's value to "closing".  
                              <li>Initiate TCP closing handshake.       
