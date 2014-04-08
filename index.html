@@ -443,7 +443,7 @@ Style guide to contributors:
              the client application calling <code>close()</code>) or 
              through an error situation, e.g. network contact lost.
              Returns the <code>closedPromise</code> that was created 
-             in the <code>TCPSocket</code> constructor.    
+             in the <code>UDPSocket</code> constructor.    
         </dd>                                      
          
         <dt>readonly attribute ReadableStream output</dt>
@@ -457,9 +457,10 @@ Style guide to contributors:
             UDP socket goes in to this writable stream object. 
             [[!STREAMS]] </dd>               
 
-        <dt> void close()</dt>
+        <dt> Promise close()</dt>
         <dd>        
-          <p>Closes the UDP socket.</p>        
+          <p>Closes the UDP socket. Returns the <code>closedPromise</code> that 
+             was created in the <code>UDPSocket</code> constructor. </p>        
         </dd>   
         
         <dt> void joinMulticast()</dt>
@@ -620,7 +621,7 @@ Style guide to contributors:
                    <ol>
                      <li>Setup the UDP socket to the bound local and remote 
                          address/port pairs in the background (without blocking 
-                         scripts). 
+                         scripts) and return <code>openedPromise</code>. 
                      <li>When the UDP socket has been successfully setup
                          the following steps MUST run:      
                        <ol>
@@ -820,7 +821,8 @@ Style guide to contributors:
       <p> The <dfn><code>close</code></dfn> method when invoked MUST run the 
          following steps:
         <ol>
-          <li>Call mysocket.output.cancel(reason). (Reason codes TBD.)         
+          <li>Call mysocket.output.cancel(reason). (Reason codes TBD.)  
+          <li>Return <code>closedPromise</code>.       
         </ol>
       </p>           
           
@@ -954,9 +956,10 @@ Style guide to contributors:
             TCP connection goes in to this writable stream object. 
             [[!STREAMS]] </dd>               
 
-        <dt> void close()</dt>
+        <dt> Promise close()</dt>
         <dd>        
-          <p>Closes the TCP socket.</p>        
+          <p>Closes the TCP socket. Returns the <code>closedPromise</code> that 
+             was created in the <code>UDPSocket</code> constructor. </p>        
         </dd>   
         
         <dt> void halfClose()</dt>
@@ -1041,7 +1044,7 @@ Style guide to contributors:
                    <ol>
                      <li>A TCP connection setup handshake to the requested 
                          address and port MUST be performed in the background 
-                         (without blocking scripts). 
+                         (without blocking scripts). Return <code>openedPromise</code>.
                      <li>When the TCP connection has been successfully established 
                          the following steps MUST run:      
                        <ol>
@@ -1240,6 +1243,7 @@ Style guide to contributors:
           following steps:
         <ol>
           <li>Call <code>mysocket.output.cancel(reason)</code>. (Reason codes TBD.)  
+          <li>Return <code>closedPromise</code>.
         </ol>
       </p>   
       
