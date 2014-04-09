@@ -1,4 +1,4 @@
-This repository is the home of the **Raw Socket API** specification being worked on by the System Applications Working Group.
+This repository is the home of the **TCP and UDP Socket API** specification being worked on by the System Applications Working Group.
 
 How to contribute?
 -
@@ -12,6 +12,6 @@ http://www.w3.org/2004/01/pp-impl/58119/status
 
 Useful links
 -
-The specification: http://raw-sockets.sysapps.org
+The specification: http://www.w3.org/2012/sysapps/tcp-udp-sockets/
 The SysApps WG homepage: http://www.w3.org/2012/sysapps/
 The SysApps WG mailing-list: http://lists.w3.org/Archives/Public/public-sysapps/
