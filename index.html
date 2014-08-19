@@ -337,7 +337,7 @@ Style guide to contributors:
         
           // While data in buffer, read and log UDP message
           while (mySocket.readableState === "readable") {            
-            var msg = mySocket.output.read();
+            var msg = mySocket.input.read();
             console.log ('Remote address: ' + msg.remoteAddress + 
                          ' Remote port: ' + msg.remotePort + 
                          'Message: ' + ab2str(msg.data)); 
@@ -347,7 +347,7 @@ Style guide to contributors:
           }  
               
           // Wait for SSDP M-SEARCH responses to arrive     
-          mySocket.output.wait().then(
+          mySocket.input.wait().then(
             receiveMSearchResponses,          
             e => console.error("Receiving error: ", e);
           );     
@@ -357,7 +357,7 @@ Style guide to contributors:
         mySocket.joinMulticast(address);
         
         // Send SSDP M-SEARCH multicast message
-        mySocket.input.write(
+        mySocket.output.write(
           {data : str2ab(search),
            remoteAddress : address,
            remotePort : port
@@ -452,16 +452,13 @@ Style guide to contributors:
              in the <code>UDPSocket</code> constructor.    
         </dd>                                      
          
-        <dt>readonly attribute ReadableStream output</dt>
+        <dt>readonly attribute ReadableStream input</dt>
         <dd>The object that represents the UDP socket's source of data, from which 
-            you can read. In other words, data from the UDP socket comes 
-            out of this readable stream object. [[!STREAMS]] </dd>     
+            you can read. [[!STREAMS]] </dd>     
             
-        <dt>readonly attribute WriteableStream input</dt>
+        <dt>readonly attribute WriteableStream output</dt>
         <dd>The object that represents the UDP socket's destination for data, 
-            into which you can write. In other words, data to be sent on the 
-            UDP socket goes in to this writable stream object. 
-            [[!STREAMS]] </dd>               
+            into which you can write. [[!STREAMS]] </dd>               
 
         <dt> Promise close()</dt>
         <dd>        
@@ -612,7 +609,7 @@ Style guide to contributors:
              it so it can later be returned by the <code>closed</code> 
              property and the <code>close</code> method.            
 
-         <li>Let the <code>mySocket.output</code> attribute be a new 
+         <li>Let the <code>mySocket.input</code> attribute be a new 
              ReadableStream object, [[!STREAMS]]. The User Agent MUST implement 
              the adaptation layer to [[!STREAMS]] for this new ReadableStream 
              object through implementation of a number of functions that are 
@@ -739,7 +736,7 @@ Style guide to contributors:
                        <li>If <code>mySocket.readyState</code> is "open" the the 
                            following steps MUST run:
                            <ol>  
-                             <li>Call <code>mySocket.input.close()</code> to 
+                             <li>Call <code>mySocket.output.close()</code> to 
                                  assure that any buffered send data is sent.  
                              <li>Set the <code>mySocket.readyState</code> 
                                  attribute's value to "closed".  
@@ -751,7 +748,7 @@ Style guide to contributors:
                      </ol>                   
              </ul>                   
                     
-         <li>Let the <code>mySocket.input</code> attribute be a new 
+         <li>Let the <code>mySocket.output</code> attribute be a new 
              WritableStream object, [[!STREAMS]]. The User Agent MUST implement 
              the adaptation layer to [[!STREAMS]] for this new WritableStream 
              object through implementation of a number of functions that are 
@@ -762,7 +759,7 @@ Style guide to contributors:
              <ul> 
                <li>The constructor's <code>start()</code> function MUST be
                    omitted as the UDP socket setup is performed in the 
-                   <code>mySocket.output</code> attribute constructor's 
+                   <code>mySocket.input</code> attribute constructor's 
                    <code>start()</code> function.                     
                <li>The constructor's <code>write(chunk, done, error)</code> 
                    function is called by the [[!STREAMS]] implementation to 
@@ -827,7 +824,7 @@ Style guide to contributors:
       <p> The <dfn><code>close</code></dfn> method when invoked MUST run the 
          following steps:
         <ol>
-          <li>Call mysocket.output.cancel(reason). (Reason codes TBD.)  
+          <li>Call mysocket.input.cancel(reason). (Reason codes TBD.)  
           <li>Return <code>closedPromise</code>.       
         </ol>
       </p>           
@@ -851,16 +848,16 @@ Style guide to contributors:
        var mySocket = new TCPSocket("127.0.0.1", 6789);
        
        // Send data to server
-       mySocket.input.write("Hello World").then(
+       mySocket.output.write("Hello World").then(
            () => {
                
                // Data sent sucessfully, wait for response
                console.log("Data has been sent to server");
-               mySocket.output.wait().then(
+               mySocket.input.wait().then(
                    () => {
                    
                        // Data in buffer, read it
-                       console.log("Data received from server:" + mySocket.output.read());
+                       console.log("Data received from server:" + mySocket.input.read());
        
                        // Close the TCP connection
                        mySocket.close();
@@ -951,16 +948,13 @@ Style guide to contributors:
              in the <code>TCPSocket</code> constructor.    
         </dd>            
          
-        <dt>readonly attribute ReadableStream output</dt>
+        <dt>readonly attribute ReadableStream input</dt>
         <dd>The object that represents the TCP socket's source of data, from which 
-            you can read. In other words, data from the TCP connection comes 
-            out of this readable stream object. [[!STREAMS]] </dd>     
+            you can read. [[!STREAMS]] </dd>     
             
-        <dt>readonly attribute WriteableStream input</dt>
+        <dt>readonly attribute WriteableStream output</dt>
         <dd>The object that represents the TCP socket's destination for data, 
-            into which you can write. In other words, data to be sent on the 
-            TCP connection goes in to this writable stream object. 
-            [[!STREAMS]] </dd>               
+            into which you can write. [[!STREAMS]] </dd>               
 
         <dt> Promise close()</dt>
         <dd>        
@@ -1035,7 +1029,7 @@ Style guide to contributors:
              it so it can later be returned by the <code>closed</code> 
              property and the <code>close</code> method.               
          
-         <li>Let the <code>mySocket.output</code> attribute be a new 
+         <li>Let the <code>mySocket.input</code> attribute be a new 
              ReadableStream object, [[!STREAMS]]. The User Agent MUST implement 
              the adaptation layer to [[!STREAMS]] for this new ReadableStream 
              object through implementation of a number of functions that are 
@@ -1175,7 +1169,7 @@ Style guide to contributors:
                        <li>If <code>mySocket.readyState</code> is "open" then the 
                            following steps MUST run:
                            <ol>  
-                             <li>Call <code>mySocket.input.close()</code> to 
+                             <li>Call <code>mySocket.output.close()</code> to 
                                  assure that any buffered send data is sent 
                                  before closing the socket.  
                              <li>Set the <code>mySocket.readyState</code> 
@@ -1186,7 +1180,7 @@ Style guide to contributors:
                      </ol>                   
              </ul>                   
                     
-         <li>Let the <code>mySocket.input</code> attribute be a new 
+         <li>Let the <code>mySocket.output</code> attribute be a new 
              WritableStream object, [[!STREAMS]]. The User Agent MUST implement 
              the adaptation layer to [[!STREAMS]] for this new WritableStream 
              object through implementation of a number of functions that are 
@@ -1197,7 +1191,7 @@ Style guide to contributors:
              <ul> 
                <li>The constructor's <code>start()</code> function MUST be
                    omitted as the TCP connection establishment is performed
-                   in the <code>mySocket.output</code> attribute constructor's 
+                   in the <code>mySocket.input</code> attribute constructor's 
                    <code>start()</code> function.                     
                <li>The constructor's <code>write(chunk, done, error)</code> 
                    function is called by the [[!STREAMS]] implementation to write data to the remote peer on the 
@@ -1248,7 +1242,7 @@ Style guide to contributors:
       <p> The <dfn><code>close()</code></dfn> method when invoked MUST run the 
           following steps:
         <ol>
-          <li>Call <code>mysocket.output.cancel(reason)</code>. (Reason codes TBD.)  
+          <li>Call <code>mysocket.input.cancel(reason)</code>. (Reason codes TBD.)  
           <li>Return <code>closedPromise</code>.
         </ol>
       </p>   
@@ -1256,7 +1250,7 @@ Style guide to contributors:
       <p> The <dfn><code>halfClose()</code></dfn> method when invoked MUST run the 
           following steps:
         <ol>
-         <li>Call <code>mysocket.input.close()</code>.            
+         <li>Call <code>mysocket.output.close()</code>.            
         </ol>
       </p>                     
       
