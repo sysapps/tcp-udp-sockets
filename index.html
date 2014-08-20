@@ -395,7 +395,7 @@ Style guide to contributors:
                  interface UDPSocket"
           class="idl">                           
 
-        <dt>readonly attribute DOMString localAddress</dt>
+        <dt>readonly attribute DOMString? localAddress</dt>
         <dd>The IPv4/6 address of the local interface, e.g. wifi or 3G, that the 
             UDPSocket object is bound to. Can be set by the constructor's 
             <code>options</code> argument's <code>localAddress</code> member. If 
@@ -408,7 +408,7 @@ Style guide to contributors:
             <code>options</code> argument, the <code>localAddress</code> 
             attribute is set to <code>null</code>.</dd>   
         
-        <dt>readonly attribute unsigned short localPort</dt>
+        <dt>readonly attribute unsigned short? localPort</dt>
         <dd>The local port that the UDPSocket object is bound to. Can be set by 
             the <code>options</code> argument in the constructor. If not set the
             user agent binds the socket to an ephemeral local port decided by 
