@@ -43,7 +43,7 @@
 
           // if you want to have extra CSS, append them to this list
           // it is recommended that the respec.css stylesheet be kept
-          extraCSS:             ["http://dev.w3.org/2009/dap/ReSpec.js/css/respec.css"],
+          // extraCSS:             ["http://dev.w3.org/2009/dap/ReSpec.js/css/respec.css"],
 
           // editors, add as many as you like
           // only "name" is required
@@ -154,8 +154,15 @@ Style guide to contributors:
   
 <!------------------------------ Abstract ------------------------------------>    
     <section id='abstract'>
-      This API provides interfaces to raw UDP sockets, TCP Client sockets and 
-      TCP Server sockets.
+      <p>
+        This API provides interfaces to raw UDP sockets, TCP Client sockets and 
+        TCP Server sockets. 
+      </p>            
+    </section>
+    
+    
+<!----------------------------- Custom Status of this document section ------->    
+    <section id='sotd'>
       <div class="note">
         <p>
           This specification is currently undergoing a major rewrite in order to 
@@ -207,9 +214,8 @@ Style guide to contributors:
         </p>        
         
       </div>   
-
-             
     </section>
+    
     
 <!----------------------------- Introduction --------------------------------->
     <section class="informative">
@@ -331,7 +337,7 @@ Style guide to contributors:
         
           // While data in buffer, read and log UDP message
           while (mySocket.readableState === "readable") {            
-            var msg = mySocket.output.read();
+            var msg = mySocket.input.read();
             console.log ('Remote address: ' + msg.remoteAddress + 
                          ' Remote port: ' + msg.remotePort + 
                          'Message: ' + ab2str(msg.data)); 
@@ -341,7 +347,7 @@ Style guide to contributors:
           }  
               
           // Wait for SSDP M-SEARCH responses to arrive     
-          mySocket.output.wait().then(
+          mySocket.input.wait().then(
             receiveMSearchResponses,          
             e => console.error("Receiving error: ", e);
           );     
@@ -351,7 +357,7 @@ Style guide to contributors:
         mySocket.joinMulticast(address);
         
         // Send SSDP M-SEARCH multicast message
-        mySocket.input.write(
+        mySocket.output.write(
           {data : str2ab(search),
            remoteAddress : address,
            remotePort : port
@@ -389,7 +395,7 @@ Style guide to contributors:
                  interface UDPSocket"
           class="idl">                           
 
-        <dt>readonly attribute DOMString localAddress</dt>
+        <dt>readonly attribute DOMString? localAddress</dt>
         <dd>The IPv4/6 address of the local interface, e.g. wifi or 3G, that the 
             UDPSocket object is bound to. Can be set by the constructor's 
             <code>options</code> argument's <code>localAddress</code> member. If 
@@ -402,7 +408,7 @@ Style guide to contributors:
             <code>options</code> argument, the <code>localAddress</code> 
             attribute is set to <code>null</code>.</dd>   
         
-        <dt>readonly attribute unsigned short localPort</dt>
+        <dt>readonly attribute unsigned short? localPort</dt>
         <dd>The local port that the UDPSocket object is bound to. Can be set by 
             the <code>options</code> argument in the constructor. If not set the
             user agent binds the socket to an ephemeral local port decided by 
@@ -428,9 +434,9 @@ Style guide to contributors:
             Can be set by the <code>options</code> argument in the constructor.  
             Default is <code>false</code>.</dd>                          
         
-        <dt>readonly attribute ReadyState readyState</dt>
+        <dt>readonly attribute SocketReadyState readyState</dt>
         <dd>The state of the UDP Socket object. A UDP Socket object can be in "open" 
-            "opening" or "closed" states. See enum <a>ReadyState</a> for details. </dd> 
+            "opening" or "closed" states. See enum <a>SocketReadyState</a> for details. </dd> 
             
         <dt> readonly attribute Promise opened</dt>
         <dd> Detects the result of the UDP socket creation attempt.Returns 
@@ -446,16 +452,13 @@ Style guide to contributors:
              in the <code>UDPSocket</code> constructor.    
         </dd>                                      
          
-        <dt>readonly attribute ReadableStream output</dt>
+        <dt>readonly attribute ReadableStream input</dt>
         <dd>The object that represents the UDP socket's source of data, from which 
-            you can read. In other words, data from the UDP socket comes 
-            out of this readable stream object. [[!STREAMS]] </dd>     
+            you can read. [[!STREAMS]] </dd>     
             
-        <dt>readonly attribute WriteableStream input</dt>
+        <dt>readonly attribute WriteableStream output</dt>
         <dd>The object that represents the UDP socket's destination for data, 
-            into which you can write. In other words, data to be sent on the 
-            UDP socket goes in to this writable stream object. 
-            [[!STREAMS]] </dd>               
+            into which you can write. [[!STREAMS]] </dd>               
 
         <dt> Promise close()</dt>
         <dd>        
@@ -604,9 +607,9 @@ Style guide to contributors:
              property.    
          <li>Create a new promise, "<code>closedPromise</code>", and store 
              it so it can later be returned by the <code>closed</code> 
-             property.            
+             property and the <code>close</code> method.            
 
-         <li>Let the <code>mySocket.output</code> attribute be a new 
+         <li>Let the <code>mySocket.input</code> attribute be a new 
              ReadableStream object, [[!STREAMS]]. The User Agent MUST implement 
              the adaptation layer to [[!STREAMS]] for this new ReadableStream 
              object through implementation of a number of functions that are 
@@ -636,7 +639,7 @@ Style guide to contributors:
                    and MUST be called by the  <code>start()</code> function 
                    implementation according to the  following steps:
                    <ul>                     
-                     <li>The <code>push()</code> argument of <code>start()</code> 
+                     <li>The <code>enqueue()</code> argument of <code>start()</code> 
                          is a function that pushes received data into the 
                          internal buffer. <br>
                          When a new UDP datagram has been received the following 
@@ -653,14 +656,14 @@ Style guide to contributors:
                            <li>Set the <code>remotePort</code> member of the 
                                <a>UDPMessage</a> object to the source port 
                                of the received UDP datagram.                                            
-                           <li>Call <code>push()</code> to push the
+                           <li>Call <code>enqueue()</code> to push the
                                <a>UDPMessage</a> object into the internal 
                                [[!STREAMS]] receive buffer. 
-                               Note that <code>push()</code> returns false if 
+                               Note that <code>enqueue()</code> returns false if 
                                the high watermark of the buffer is reached.
                                However, as there is no flow control mechanism
                                in UDP the flow of datagrams can't be stopped.
-                               The <code>push()</code> return value should 
+                               The <code>enqueue()</code> return value should 
                                therefore be ignored. This means that datagrams
                                will be lost if the internal receive buffer 
                                has been filled to it's memory limit but
@@ -733,7 +736,7 @@ Style guide to contributors:
                        <li>If <code>mySocket.readyState</code> is "open" the the 
                            following steps MUST run:
                            <ol>  
-                             <li>Call <code>mySocket.input.close()</code> to 
+                             <li>Call <code>mySocket.output.close()</code> to 
                                  assure that any buffered send data is sent.  
                              <li>Set the <code>mySocket.readyState</code> 
                                  attribute's value to "closed".  
@@ -745,7 +748,7 @@ Style guide to contributors:
                      </ol>                   
              </ul>                   
                     
-         <li>Let the <code>mySocket.input</code> attribute be a new 
+         <li>Let the <code>mySocket.output</code> attribute be a new 
              WritableStream object, [[!STREAMS]]. The User Agent MUST implement 
              the adaptation layer to [[!STREAMS]] for this new WritableStream 
              object through implementation of a number of functions that are 
@@ -756,14 +759,14 @@ Style guide to contributors:
              <ul> 
                <li>The constructor's <code>start()</code> function MUST be
                    omitted as the UDP socket setup is performed in the 
-                   <code>mySocket.output</code> attribute constructor's 
+                   <code>mySocket.input</code> attribute constructor's 
                    <code>start()</code> function.                     
-               <li>The constructor's <code>write(data, done, error)</code> 
+               <li>The constructor's <code>write(chunk, done, error)</code> 
                    function is called by the [[!STREAMS]] implementation to 
                    write UDP data. The <code>write()</code> 
                    function MUST run the following steps:
                    <ol>  
-                     <li>Let the <code>data</code> argument be the result of 
+                     <li>Let the <code>chunk</code> argument be the result of 
                          converting data to an <a>UDPMessage</a> (per 
                          [[!WEBIDL]] dictionary conversion).
                      <li>If no default remote address was specified in the 
@@ -821,7 +824,7 @@ Style guide to contributors:
       <p> The <dfn><code>close</code></dfn> method when invoked MUST run the 
          following steps:
         <ol>
-          <li>Call mysocket.output.cancel(reason). (Reason codes TBD.)  
+          <li>Call mysocket.input.cancel(reason). (Reason codes TBD.)  
           <li>Return <code>closedPromise</code>.       
         </ol>
       </p>           
@@ -845,16 +848,16 @@ Style guide to contributors:
        var mySocket = new TCPSocket("127.0.0.1", 6789);
        
        // Send data to server
-       mySocket.input.write("Hello World").then(
+       mySocket.output.write("Hello World").then(
            () => {
                
                // Data sent sucessfully, wait for response
                console.log("Data has been sent to server");
-               mySocket.output.wait().then(
+               mySocket.input.wait().then(
                    () => {
                    
                        // Data in buffer, read it
-                       console.log("Data received from server:" + mySocket.output.read());
+                       console.log("Data received from server:" + mySocket.input.read());
        
                        // Close the TCP connection
                        mySocket.close();
@@ -927,8 +930,8 @@ Style guide to contributors:
             <code>options</code> argument in the constructor. Default is 
             <code>true</code>.</dd>                                   
             
-        <dt>readonly attribute ReadyState readyState</dt>
-        <dd>The state of the TCP Socket object. See enum <a>ReadyState</a> for 
+        <dt>readonly attribute SocketReadyState readyState</dt>
+        <dd>The state of the TCP Socket object. See enum <a>SocketReadyState</a> for 
             details.</dd>  
             
         <dt> readonly attribute Promise opened</dt>
@@ -945,16 +948,13 @@ Style guide to contributors:
              in the <code>TCPSocket</code> constructor.    
         </dd>            
          
-        <dt>readonly attribute ReadableStream output</dt>
+        <dt>readonly attribute ReadableStream input</dt>
         <dd>The object that represents the TCP socket's source of data, from which 
-            you can read. In other words, data from the TCP connection comes 
-            out of this readable stream object. [[!STREAMS]] </dd>     
+            you can read. [[!STREAMS]] </dd>     
             
-        <dt>readonly attribute WriteableStream input</dt>
+        <dt>readonly attribute WriteableStream output</dt>
         <dd>The object that represents the TCP socket's destination for data, 
-            into which you can write. In other words, data to be sent on the 
-            TCP connection goes in to this writable stream object. 
-            [[!STREAMS]] </dd>               
+            into which you can write. [[!STREAMS]] </dd>               
 
         <dt> Promise close()</dt>
         <dd>        
@@ -1027,9 +1027,9 @@ Style guide to contributors:
              property.    
          <li>Create a new promise, "<code>closedPromise</code>", and store 
              it so it can later be returned by the <code>closed</code> 
-             property.               
+             property and the <code>close</code> method.               
          
-         <li>Let the <code>mySocket.output</code> attribute be a new 
+         <li>Let the <code>mySocket.input</code> attribute be a new 
              ReadableStream object, [[!STREAMS]]. The User Agent MUST implement 
              the adaptation layer to [[!STREAMS]] for this new ReadableStream 
              object through implementation of a number of functions that are 
@@ -1058,7 +1058,7 @@ Style guide to contributors:
                    <code>start()</code> function implementation according to the
                    following steps:
                    <ul>                     
-                     <li>The <code>push()</code> argument of <code>start()</code> 
+                     <li>The <code>enqueue()</code> argument of <code>start()</code> 
                          is a function that pushes received data into the 
                          internal buffer. <br>
                          When new TCP data is received the following steps MUST 
@@ -1066,11 +1066,11 @@ Style guide to contributors:
                          <ol>                                     
                            <li>Create a new read-only <code>ArrayBuffer</code> 
                                object whose contents are the received TCP data.
-                           <li>Call <code>push()</code> to push the
+                           <li>Call <code>enqueue()</code> to push the
                                <code>ArrayBuffer</code> into the internal 
                                [[!STREAMS]] receive buffer. 
                            <li>If the high watermark of the buffer is reached 
-                               <code>push()</code> returns false and the TCP 
+                               <code>enqueue()</code> returns false and the TCP 
                                flow control MUST be used to stop the data 
                                transmission from the remote peer.          
                          </ol>                                                           
@@ -1169,7 +1169,7 @@ Style guide to contributors:
                        <li>If <code>mySocket.readyState</code> is "open" then the 
                            following steps MUST run:
                            <ol>  
-                             <li>Call <code>mySocket.input.close()</code> to 
+                             <li>Call <code>mySocket.output.close()</code> to 
                                  assure that any buffered send data is sent 
                                  before closing the socket.  
                              <li>Set the <code>mySocket.readyState</code> 
@@ -1180,7 +1180,7 @@ Style guide to contributors:
                      </ol>                   
              </ul>                   
                     
-         <li>Let the <code>mySocket.input</code> attribute be a new 
+         <li>Let the <code>mySocket.output</code> attribute be a new 
              WritableStream object, [[!STREAMS]]. The User Agent MUST implement 
              the adaptation layer to [[!STREAMS]] for this new WritableStream 
              object through implementation of a number of functions that are 
@@ -1191,14 +1191,14 @@ Style guide to contributors:
              <ul> 
                <li>The constructor's <code>start()</code> function MUST be
                    omitted as the TCP connection establishment is performed
-                   in the <code>mySocket.output</code> attribute constructor's 
+                   in the <code>mySocket.input</code> attribute constructor's 
                    <code>start()</code> function.                     
-               <li>The constructor's <code>write(data, done, error)</code> 
+               <li>The constructor's <code>write(chunk, done, error)</code> 
                    function is called by the [[!STREAMS]] implementation to write data to the remote peer on the 
                    TCP connection.
                    The <code>write()</code> function MUST run the following steps:
                    <ol>
-                     <li>Send TCP data with data passed in the <code>data</code>
+                     <li>Send TCP data with data passed in the <code>chunk</code>
                          parameter to the address and port of the recipient as 
                          stated by the TCPSocket object constructor's 
                          <code>remoteAddress</code> and <code>remotePort</code> 
@@ -1242,7 +1242,7 @@ Style guide to contributors:
       <p> The <dfn><code>close()</code></dfn> method when invoked MUST run the 
           following steps:
         <ol>
-          <li>Call <code>mysocket.output.cancel(reason)</code>. (Reason codes TBD.)  
+          <li>Call <code>mysocket.input.cancel(reason)</code>. (Reason codes TBD.)  
           <li>Return <code>closedPromise</code>.
         </ol>
       </p>   
@@ -1250,7 +1250,7 @@ Style guide to contributors:
       <p> The <dfn><code>halfClose()</code></dfn> method when invoked MUST run the 
           following steps:
         <ol>
-         <li>Call <code>mysocket.input.close()</code>.            
+         <li>Call <code>mysocket.output.close()</code>.            
         </ol>
       </p>                     
       
@@ -1337,9 +1337,9 @@ Style guide to contributors:
             <code>options</code> argument in the constructor. Default is 
             <code>true</code>.</dd>                    
         
-        <dt>readonly attribute ReadyState readyState</dt>
+        <dt>readonly attribute SocketReadyState readyState</dt>
         <dd>The state of the TCP server object. A TCP server socket object can 
-            be in "open", "opening" or "closed" states. See enum <a>ReadyState</a> 
+            be in "open", "opening" or "closed" states. See enum <a>SocketReadyState</a> 
             for details. </dd>        
             
         <dt>attribute EventHandler onopen</dt>
@@ -1507,8 +1507,8 @@ Style guide to contributors:
 
       <section>
         <h2>Event handlers</h2>
-        <p>The following are the <a>event handlers</a> (and their corresponding 
-           <a>event handler event types</a>) that MUST be supported as attributes 
+        <p>Below is a list of <a>event handler</a> and corresponding 
+           <a>event handler event types</a> that MUST be supported as attributes 
            by the <a>TCPServerSocket</a> object.</p>
         
         <table class="simple">
@@ -1733,9 +1733,9 @@ Style guide to contributors:
       <h2> Enums </h2>
       <section>
         
-        <h3>ReadyState</h3>
+        <h3>SocketReadyState</h3>
       
-        <dl id='enum-basic' class='idl' title='enum ReadyState'>
+        <dl id='enum-basic' class='idl' title='enum SocketReadyState'>
           <dt>opening</dt>
           <dd>The socket is in opening state, i.e. availability of local address/port 
               is being checked, network status is being checked, etc. For TCP a 
@@ -1780,7 +1780,7 @@ Style guide to contributors:
               local address/port pair as it is already in use.</dd>          
           <dt>send_buffer_full</dt>
           <dd>The send buffer is full. Application should wait for a 
-              <code><a>drain</a></code> event</dd>    
+              <code>drain</code> event</dd>    
           <dt>tcp_server_max_connections</dt>                    
           <dd>The TCP server can not accept more connections as the number of
               max open connections is reached.</dd>  
