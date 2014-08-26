@@ -415,7 +415,7 @@ Style guide to contributors:
             the system and this attribute is null. </dd>             
 
         <dt>readonly attribute DOMString? remoteAddress</dt>
-        <dd>The default remote IPv4/6 address that is used for 
+        <dd>The default remote host name or IPv4/6 address that is used for 
             subsequent send() calls. Null if not stated by the options argument
             of the constructor.</dd>   
         
@@ -506,11 +506,12 @@ Style guide to contributors:
         <ol>
          <li>Create a new UDPSocket object ("<code>mySocket</code>").
          <li>If the <code>options</code> argument's <code>remoteAddress</code> 
-             member is present and it is a valid IPv4/6 address then set the 
-             <code>mySocket.remoteAddress</code> attribute (default remote address) 
-             to the requested address. Else, if the <code>remoteAddress</code> 
-             member is present but it is not a valid IPv4/6 address then throw 
-             DOMException <code>InvalidAccessError</code> and abort the remaining
+             member is present and it is a valid host name or IPv4/6 address 
+             then set the <code>mySocket.remoteAddress</code> attribute 
+             (default remote address) to the requested address. Else, if the 
+             <code>remoteAddress</code> member is present but it is not a 
+             valid host name or IPv4/6 address then throw DOMException 
+             <code>InvalidAccessError</code> and abort the remaining
              steps.
              Otherwise, if the <code>options</code> argument's <code>remoteAddress</code> 
              member is absent then set the <code>mySocket.remoteAddress</code> 
@@ -898,8 +899,8 @@ Style guide to contributors:
           class="idl">         
           
         <dt>readonly attribute DOMString remoteAddress</dt>
-        <dd>The IPv4/6 address of the peer as stated by the remoteAddress argument 
-            in the constructor.</dd>   
+        <dd>The host name or IPv4/6 address of the peer as stated by the 
+            remoteAddress argument in the constructor.</dd>   
         
         <dt>readonly attribute unsigned short remotePort</dt>
         <dd>The port of the peer as stated by the remotePort argument in the 
@@ -973,9 +974,9 @@ Style guide to contributors:
          run the following steps:        
         <ol>
          <li>Create a new TCPSocket object ("<code>mySocket</code>").
-         <li>If the <code>remoteAddress</code> argument is not a valid IPv4/6 
-             address and/or the <code>remotePort</code> argument is not a valid 
-             port number then throw DOMException <code>"InvalidAccessError"</code> 
+         <li>If the <code>remoteAddress</code> argument is not a valid host name
+             or IPv4/6 address and/or the <code>remotePort</code> argument is 
+             not a valid port number then throw DOMException <code>"InvalidAccessError"</code> 
              and abort the remaining steps, else set the <code>mySocket.remoteAddress</code> 
              and <code>mySocket.remotePort</code> attributes to the requested values.
          <li>If the <code>options</code> argument's <code>localAddress</code> 
@@ -1626,8 +1627,8 @@ Style guide to contributors:
             port decided by the system.</dd>             
 
         <dt>DOMString remoteAddress</dt>
-        <dd>When present the default remote IPv4/6 address that is used for 
-            subsequent send() calls.</dd>   
+        <dd>When present the default remote host name or IPv4/6 address 
+            that is used for subsequent send() calls.</dd>   
         
         <dt>unsigned short remotePort</dt>
         <dd>When present the default remote port that is used for subsequent 
