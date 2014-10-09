@@ -92,9 +92,9 @@
             // Reference to the WHATWG Streams API specification          
             "STREAMS": {
               "title": "Streams API",            
-              "href": "https://github.com/whatwg/streams",
+              "href": "https://streams.spec.whatwg.org/",
               "authors": ["Domenic Denicola"],              
-              "status": "unofficial",
+              "status": "Living standard",
               "publisher": "WHATWG"
             },
             
@@ -336,8 +336,8 @@ Style guide to contributors:
         function receiveMSearchResponses() {         
         
           // While data in buffer, read and log UDP message
-          while (mySocket.readableState === "readable") {            
-            var msg = mySocket.input.read();
+          while (mySocket.readable.state === "readable") {            
+            var msg = mySocket.readable.read();
             console.log ('Remote address: ' + msg.remoteAddress + 
                          ' Remote port: ' + msg.remotePort + 
                          'Message: ' + ab2str(msg.data)); 
@@ -347,7 +347,7 @@ Style guide to contributors:
           }  
               
           // Wait for SSDP M-SEARCH responses to arrive     
-          mySocket.input.wait().then(
+          mySocket.readable.wait().then(
             receiveMSearchResponses,          
             e => console.error("Receiving error: ", e);
           );     
@@ -357,7 +357,7 @@ Style guide to contributors:
         mySocket.joinMulticast(address);
         
         // Send SSDP M-SEARCH multicast message
-        mySocket.output.write(
+        mySocket.writeable.write(
           {data : str2ab(search),
            remoteAddress : address,
            remotePort : port
@@ -452,11 +452,11 @@ Style guide to contributors:
              in the <code>UDPSocket</code> constructor.    
         </dd>                                      
          
-        <dt>readonly attribute ReadableStream input</dt>
+        <dt>readonly attribute ReadableStream readable</dt>
         <dd>The object that represents the UDP socket's source of data, from which 
             you can read. [[!STREAMS]] </dd>     
             
-        <dt>readonly attribute WriteableStream output</dt>
+        <dt>readonly attribute WriteableStream writeable</dt>
         <dd>The object that represents the UDP socket's destination for data, 
             into which you can write. [[!STREAMS]] </dd>               
 
@@ -610,7 +610,7 @@ Style guide to contributors:
              it so it can later be returned by the <code>closed</code> 
              property and the <code>close</code> method.            
 
-         <li>Let the <code>mySocket.input</code> attribute be a new 
+         <li>Let the <code>mySocket.readable</code> attribute be a new 
              ReadableStream object, [[!STREAMS]]. The User Agent MUST implement 
              the adaptation layer to [[!STREAMS]] for this new ReadableStream 
              object through implementation of a number of functions that are 
@@ -737,7 +737,7 @@ Style guide to contributors:
                        <li>If <code>mySocket.readyState</code> is "open" the the 
                            following steps MUST run:
                            <ol>  
-                             <li>Call <code>mySocket.output.close()</code> to 
+                             <li>Call <code>mySocket.writeable.close()</code> to 
                                  assure that any buffered send data is sent.  
                              <li>Set the <code>mySocket.readyState</code> 
                                  attribute's value to "closed".  
@@ -747,9 +747,22 @@ Style guide to contributors:
                                 socket.    
                            </ol>       
                      </ol>                   
+                     
+                 <p class="issue">
+                   If the constructor's <code>strategy</code> argument is
+                   omitted the 
+                   <a href= "https://streams.spec.whatwg.org/#default-rs-strategy">Default strategy for Readable Streams</a> 
+                   applies. Currently this means that the ReadableStream 
+                   object goes to "readable" state after 1 chunk has been 
+                   enqueued to the internal ReadableStream object's input
+                   buffer. An application must call .wait() to be notified 
+                   when the state changes to "readable". To be further 
+                   investigated which ReadableStreamStrategy that should 
+                   be applied to UDP.
+                 </p>                         
              </ul>                   
                     
-         <li>Let the <code>mySocket.output</code> attribute be a new 
+         <li>Let the <code>mySocket.writeable</code> attribute be a new 
              WritableStream object, [[!STREAMS]]. The User Agent MUST implement 
              the adaptation layer to [[!STREAMS]] for this new WritableStream 
              object through implementation of a number of functions that are 
@@ -758,15 +771,23 @@ Style guide to contributors:
              functions are described below:
                           
              <ul> 
-               <li>The constructor's <code>start()</code> function MUST be
-                   omitted as the UDP socket setup is performed in the 
-                   <code>mySocket.input</code> attribute constructor's 
-                   <code>start()</code> function.                     
-               <li>The constructor's <code>write(chunk, done, error)</code> 
+               <li>The constructor's <code>start()</code> function MUST run the
+                   following steps:
+                   <ol>
+                     <li>Create a new promise, "<code>writableStartPromise</code>".
+                     <li>If the attempt to create a new UDP socket (see the 
+                         description of the semantics for the <code>mySocket.readable</code> 
+                         attribute constructor's <code>start()</code> function ) 
+                         succeded resolve <code>writableStartPromise</code>
+                         with <code>undefined</code>, else reject <code>writableStartPromise</code> 
+                         with DOMException <code>"NetworkError"</code>.   
+                   </ol>                                          
+               <li>The constructor's <code>write(chunk)</code> 
                    function is called by the [[!STREAMS]] implementation to 
                    write UDP data. The <code>write()</code> 
                    function MUST run the following steps:
-                   <ol>  
+                   <ol>
+                     <li>Create a new promise, "<code>writePromise</code>"
                      <li>Let the <code>chunk</code> argument be the result of 
                          converting data to an <a>UDPMessage</a> (per 
                          [[!WEBIDL]] dictionary conversion).
@@ -781,7 +802,7 @@ Style guide to contributors:
                          <code>remotePort</code> member and the 
                          <a>UDPMesssage</a> object's <code>remotePort</code> 
                          member is not present or null then throw DOMException 
-                         <code>InvalidAccessError</code> and abort these steps.                                                                                         
+                         <code>InvalidAccessError</code> and abort these steps.                      
                      <li>Send UDP data with data passed in the <code>data</code> 
                          member of the <a>UDPMessage</a> object. The destination 
                          address is the address defined by the 
@@ -795,26 +816,31 @@ Style guide to contributors:
                          member if present, else the destination port
                          is defined by the UDPSocket's constructor 
                          <code>options</code> argument's 
-                         <code>remotePort</code> member.                        
-                  </ol>       
-                      The following functions are arguments of the constructor's 
-                      <code>write()</code> function and MUST be called by the 
-                      <code>write()</code> function implementation:
-                      <ul>
-                        <li>The <code>done()</code> argument of <code>write()</code> 
-                            is a function that MUST be called when the 
-                            buffered data has been sent to the remote peer  
-                            and the underlying resource is ready for more data. 
-                        <li>The <code>error(errorReason)</code> argument of 
-                            <code>write()</code> is a function that MUST be 
-                            called if an error ocurred during writing. 
-                            (<code>errorReason</code>
-                            TBD).                         
-                      </ul>                  
+                         <code>remotePort</code> member.  
+                     <li>If sending succeed resolve <code>writePromise</code>
+                         with <code>undefined</code>, else reject
+                         <code>writePromise</code> with DOMException
+                         <code>"NetworkError"</code>.     
+                   </ol>                                        
                                         
-               <li>The constructor's <code>close()</code> 
-                   function MUST be omitted as it is not possible to just close 
-                   the writable side of a UDP socket.  
+               <li>The constructor's <code>close()</code> and <code>abort()</code> 
+                   functions MUST be omitted as it is not possible to just close 
+                   the writable side of a UDP socket.
+                    
+               <p class="issue">
+                 If the constructor's <code>strategy</code> argument is
+                 omitted the 
+                 <a href= "https://streams.spec.whatwg.org/#default-ws-strategy">Default strategy for Writable Streams</a> 
+                 applies. Currently this means that the WriteableStream 
+                 object goes to "waiting" state after 1 chunk has been 
+                 written to the internal WriteableStream object's output
+                 buffer. This means that the application must call .wait() 
+                 to be notified of when the state changes to "writable", 
+                 i.e. the queued chunk has been written to the remote peer
+                 and more data chunks could be written. To be further 
+                 investigated which WritableStreamStrategy that should 
+                 be applied to UDP.
+               </p>                       
              </ul>
                                        
          <li>Return the newly created <code>UDPSocket</code> object ("<code>mySocket</code>")
@@ -825,7 +851,7 @@ Style guide to contributors:
       <p> The <dfn><code>close</code></dfn> method when invoked MUST run the 
          following steps:
         <ol>
-          <li>Call mysocket.input.cancel(reason). (Reason codes TBD.)  
+          <li>Call mysocket.readable.cancel(reason). (Reason codes TBD.)  
           <li>Return <code>closedPromise</code>.       
         </ol>
       </p>           
@@ -849,16 +875,16 @@ Style guide to contributors:
        var mySocket = new TCPSocket("127.0.0.1", 6789);
        
        // Send data to server
-       mySocket.output.write("Hello World").then(
+       mySocket.writeable.write("Hello World").then(
            () => {
                
                // Data sent sucessfully, wait for response
                console.log("Data has been sent to server");
-               mySocket.input.wait().then(
+               mySocket.readable.wait().then(
                    () => {
                    
                        // Data in buffer, read it
-                       console.log("Data received from server:" + mySocket.input.read());
+                       console.log("Data received from server:" + mySocket.readable.read());
        
                        // Close the TCP connection
                        mySocket.close();
@@ -949,18 +975,18 @@ Style guide to contributors:
              in the <code>TCPSocket</code> constructor.    
         </dd>            
          
-        <dt>readonly attribute ReadableStream input</dt>
+        <dt>readonly attribute ReadableStream readable</dt>
         <dd>The object that represents the TCP socket's source of data, from which 
             you can read. [[!STREAMS]] </dd>     
             
-        <dt>readonly attribute WriteableStream output</dt>
+        <dt>readonly attribute WriteableStream writeable</dt>
         <dd>The object that represents the TCP socket's destination for data, 
             into which you can write. [[!STREAMS]] </dd>               
 
         <dt> Promise close()</dt>
         <dd>        
           <p>Closes the TCP socket. Returns the <code>closedPromise</code> that 
-             was created in the <code>UDPSocket</code> constructor. </p>        
+             was created in the <code>TCPSocket</code> constructor. </p>        
         </dd>   
         
         <dt> void halfClose()</dt>
@@ -1030,7 +1056,7 @@ Style guide to contributors:
              it so it can later be returned by the <code>closed</code> 
              property and the <code>close</code> method.               
          
-         <li>Let the <code>mySocket.input</code> attribute be a new 
+         <li>Let the <code>mySocket.readable</code> attribute be a new 
              ReadableStream object, [[!STREAMS]]. The User Agent MUST implement 
              the adaptation layer to [[!STREAMS]] for this new ReadableStream 
              object through implementation of a number of functions that are 
@@ -1170,7 +1196,7 @@ Style guide to contributors:
                        <li>If <code>mySocket.readyState</code> is "open" then the 
                            following steps MUST run:
                            <ol>  
-                             <li>Call <code>mySocket.output.close()</code> to 
+                             <li>Call <code>mySocket.writeable.close()</code> to 
                                  assure that any buffered send data is sent 
                                  before closing the socket.  
                              <li>Set the <code>mySocket.readyState</code> 
@@ -1178,10 +1204,23 @@ Style guide to contributors:
                              <li>Initiate TCP closing handshake.       
                            </ol>                              
                               
-                     </ol>                   
+                     </ol>  
+                   
+                 <p class="issue">
+                   If the constructor's <code>strategy</code> argument is
+                   omitted the 
+                   <a href= "https://streams.spec.whatwg.org/#default-rs-strategy">Default strategy for Readable Streams</a> 
+                   applies. Currently this means that the ReadableStream 
+                   object goes to "readable" state after 1 chunk has been 
+                   enqueued to the internal ReadableStream object's input
+                   buffer. An application must call .wait() to be notified 
+                   when the state changes to "readable". To be further 
+                   investigated which ReadableStreamStrategy that should 
+                   be applied to TCP.
+                 </p>                                         
              </ul>                   
                     
-         <li>Let the <code>mySocket.output</code> attribute be a new 
+         <li>Let the <code>mySocket.writeable</code> attribute be a new 
              WritableStream object, [[!STREAMS]]. The User Agent MUST implement 
              the adaptation layer to [[!STREAMS]] for this new WritableStream 
              object through implementation of a number of functions that are 
@@ -1189,40 +1228,42 @@ Style guide to contributors:
              [[!STREAMS]] implementation. The semantics for these 
              functions are described below:
                           
-             <ul> 
-               <li>The constructor's <code>start()</code> function MUST be
-                   omitted as the TCP connection establishment is performed
-                   in the <code>mySocket.input</code> attribute constructor's 
-                   <code>start()</code> function.                     
-               <li>The constructor's <code>write(chunk, done, error)</code> 
-                   function is called by the [[!STREAMS]] implementation to write data to the remote peer on the 
-                   TCP connection.
+             <ul>                    
+               <li>The constructor's <code>start()</code> function MUST run the
+                   following steps:
+                   <ol>
+                     <li>Create a new promise, "<code>writableStartPromise</code>".
+                     <li>If the attempt to create a new TCP socket and establish
+                         a new TCP connection (see the description of the semantics
+                         for the <code>mySocket.readable</code> attribute 
+                         constructor's <code>start()</code> function ) succeded
+                         resolve <code>writableStartPromise</code>
+                         with <code>undefined</code>, else reject
+                         <code>writableStartPromise</code> with DOMException
+                         <code>"NetworkError"</code>.   
+                   </ol>                                
+               <li>The constructor's <code>write(chunk)</code> function is 
+                   called by the [[!STREAMS]] implementation to write data to
+                   the remote peer on the TCP connection.
                    The <code>write()</code> function MUST run the following steps:
                    <ol>
+                     <li>Create a new promise, "<code>writePromise</code>"
                      <li>Send TCP data with data passed in the <code>chunk</code>
                          parameter to the address and port of the recipient as 
                          stated by the TCPSocket object constructor's 
                          <code>remoteAddress</code> and <code>remotePort</code> 
-                         fields.
-                   </ol>                              
-                   The following functions are arguments of the constuctor's 
-                   <code>write()</code> function and MUST be called by the 
-                   <code>write()</code> function implementation:
-                   <ul>
-                     <li>The <code>done()</code> argument of <code>write()</code> 
-                         is a function that MUST be called when the 
-                         buffered data has been sent to the remote peer  
-                         the underlying resource is ready for more data. 
-                     <li>The <code>error(errorReason)</code> argument of <code>write()</code> 
-                         is a function that MUST be called if an error 
-                         ocurred during writing. (<code>errorReason</code>
-                         TBD).                         
-                   </ul>                  
-                      
-               <li>The constructor's <code>close()</code> 
-                   function is called by the [[!STREAMS]] implementation to close the writable side 
-                   of the connection, that is a TCP "half close" is performed.
-                   The <code>close()</code> function MUST run the following steps:
+                         fields. The data in the <code>chunk</code> parameter 
+                         can be of any type.  
+                     <li>If sending succeed resolve <code>writePromise</code>
+                         with <code>undefined</code>, else reject
+                         <code>writePromise</code> with DOMException
+                         <code>"NetworkError"</code>.     
+                   </ol>                                   
+               <li>The constructor's <code>close()</code> function is called 
+                   by the [[!STREAMS]] implementation to close the writable 
+                   side of the connection, that is a TCP "half close" is 
+                   performed. The <code>close()</code> function MUST run the 
+                   following steps:
                     <ol>
                      <li>If <code>mySocket.readyState</code> is "closing" or "closed" then 
                          do nothing.
@@ -1232,7 +1273,29 @@ Style guide to contributors:
                      <li>If <code>mySocket.readyState</code> is "open" then send FIN and 
                          set the <code>mySocket.readyState</code> attribute to "halfclosed".                     
                    </ol>
- 
+                   Note that the Streams implementation will call <code>close()</code>
+                   after all queued-up writes successfully completed.
+               <li>The constructor's <code>abort()</code> function is called 
+                   by the [[!STREAMS]] implementation to abort the writable 
+                   side of the connection. This function MUST run the same steps
+                   as <code>close()</code> but note that the Streams 
+                   implementation will throw away any pending queued up chunks.    
+                   
+                   <p class="issue">
+                     If the constructor's <code>strategy</code> argument is
+                     omitted the 
+                     <a href= "https://streams.spec.whatwg.org/#default-ws-strategy">Default strategy for Writable Streams</a> 
+                     applies. Currently this means that the WriteableStream 
+                     object goes to "waiting" state after 1 chunk has been 
+                     written to the internal WriteableStream object's output
+                     buffer. This means that the application must call .wait() 
+                     to be notified of when the state changes to "writable", 
+                     i.e. the queued chunk has been written to the remote peer
+                     and more data chunks could be written. To be further 
+                     investigated which WritableStreamStrategy that should 
+                     be applied to TCP.
+                   </p>   
+                                  
              </ul>                                         
                                   
          <li>Return the newly created <a>TCPSocket</a> object ("<code>mySocket</code>") 
@@ -1243,7 +1306,7 @@ Style guide to contributors:
       <p> The <dfn><code>close()</code></dfn> method when invoked MUST run the 
           following steps:
         <ol>
-          <li>Call <code>mysocket.input.cancel(reason)</code>. (Reason codes TBD.)  
+          <li>Call <code>mysocket.readable.cancel(reason)</code>. (Reason codes TBD.)  
           <li>Return <code>closedPromise</code>.
         </ol>
       </p>   
@@ -1251,7 +1314,7 @@ Style guide to contributors:
       <p> The <dfn><code>halfClose()</code></dfn> method when invoked MUST run the 
           following steps:
         <ol>
-         <li>Call <code>mysocket.output.close()</code>.            
+         <li>Call <code>mysocket.writeable.close()</code>.            
         </ol>
       </p>                     
       
