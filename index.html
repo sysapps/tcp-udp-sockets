@@ -755,7 +755,7 @@ Style guide to contributors:
                    applies. Currently this means that the ReadableStream 
                    object goes to "readable" state after 1 chunk has been 
                    enqueued to the internal ReadableStream object's input
-                   buffer. An application must call .wait() to be notified 
+                   buffer. An application should call .wait() to be notified 
                    when the state changes to "readable". To be further 
                    investigated which ReadableStreamStrategy that should 
                    be applied to UDP.
@@ -834,7 +834,7 @@ Style guide to contributors:
                  applies. Currently this means that the WriteableStream 
                  object goes to "waiting" state after 1 chunk has been 
                  written to the internal WriteableStream object's output
-                 buffer. This means that the application must call .wait() 
+                 buffer. This means that the application should call .wait() 
                  to be notified of when the state changes to "writable", 
                  i.e. the queued chunk has been written to the remote peer
                  and more data chunks could be written. To be further 
@@ -1213,7 +1213,7 @@ Style guide to contributors:
                    applies. Currently this means that the ReadableStream 
                    object goes to "readable" state after 1 chunk has been 
                    enqueued to the internal ReadableStream object's input
-                   buffer. An application must call .wait() to be notified 
+                   buffer. An application should call .wait() to be notified 
                    when the state changes to "readable". To be further 
                    investigated which ReadableStreamStrategy that should 
                    be applied to TCP.
@@ -1288,7 +1288,7 @@ Style guide to contributors:
                      applies. Currently this means that the WriteableStream 
                      object goes to "waiting" state after 1 chunk has been 
                      written to the internal WriteableStream object's output
-                     buffer. This means that the application must call .wait() 
+                     buffer. This means that the application should call .wait() 
                      to be notified of when the state changes to "writable", 
                      i.e. the queued chunk has been written to the remote peer
                      and more data chunks could be written. To be further 
