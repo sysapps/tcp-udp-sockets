@@ -165,15 +165,11 @@ Style guide to contributors:
     <section id='sotd'>
       <div class="note">
         <p>
-          This specification is currently undergoing a major rewrite in order to 
-          be based on the Streams API. Currently the reference to the Streams API
-          is [[!STREAMS]] but there is ongoing work to align this specification
-          with [[!W3C-STREAMS]].
-        </p>
-        <p>
-          In the current version only the interfaces <a>TCPSocket</a> and
-          <a>UDPSocket</a> have been rewritten. <a>TCPServerSocket</a> 
-          remains to be rewritten.
+          This specification is based the Streams API, [[!STREAMS]]. Note that the
+          Streams API is work in progress and any changes made to Streams may
+          impact the TCP and UDP Socket API specification. However, it is the 
+          editor's ambition to continously update the TCP and UDP API specification
+          to be aligned with the latest version the Streams API.
         </p>
       </div>   
       
@@ -186,15 +182,9 @@ Style guide to contributors:
           the ECMAScript Error type such as DOMException or the built in 
           ECMAScript error types. See 
           <a href="https://github.com/w3ctag/promises-guide#rejection-reasons-should-be-errors">Promise rejection reasons</a>.
-          In the TCP and UDP Socket API specification we need a better granularity 
-          of machine readable errors and therefore the <a>SocketError</a> 
-          interface was added. This interface extends DOMError with a 
-          machine readble error type providing a better granularity of error 
-          reporting. However, the <a>SocketError</a> interface can not be used
-          by promises so I have temporily just stated a DOMException for 
-          promises rejection reasons in the specification. This issue must be 
-          further explored and aligned with ongoing discussions in W3C, WHAT WG 
-          and ECMA. For example see <a href="http://esdiscuss.org/topic/error-objects-in-w3c-apis">Error objects in W3C APIs</a>.
+          In the TCP and UDP Socket API the error names defined in <a href="http://heycam.github.io/webidl/#idl-DOMException-error-names">
+          WebIDL Exceptions</a> are used. If additional error names are needed an update to <a href="https://github.com/heycam/webidl/">
+          Github WebIDL</a> should be requested though a Pull Request. 
         </p>
 
       </div>    
@@ -265,27 +255,6 @@ Style guide to contributors:
 
       </p>
       
-      <p>The <code><a href="http://dev.w3.org/html5/spec/webappapis.html#eventhandler"> 
-         EventHandler</a></code> interface represents a callback used for event handlers 
-         as defined in [[!HTML5]].
-      </p>
-      
-      <p>The concepts <dfn><a href="http://dev.w3.org/html5/spec/webappapis.html#queue-a-task"> 
-         queue a task</a></dfn> and <dfn><a href="http://dev.w3.org/html5/spec/webappapis.html#fire-a-simple-event"> 
-         fire an event</a></dfn> are defined in [[!HTML5]].
-      </p>
-            
-      <p>The terms <dfn><a href="http://dev.w3.org/html5/spec/webappapis.html#event-handlers"> 
-         event handler</a></dfn> and <dfn><a href="http://dev.w3.org/html5/spec/webappapis.html#event-handler-event-type"> 
-         event handler event types</a></dfn> are defined in [[!HTML5]].
-      </p>
-      
-      <p>The <a href="http://dev.w3.org/html5/spec/webappapis.html#task-source">task source</a> 
-         for all <span title="concept-task">tasks</span> 
-         <span title="queue a task">queued</span> in this specification is the 
-         <a href="http://www.w3.org/TR/websockets/#websocket-task-source">WebSocket task source</a>.
-      </p>     
-      
     </section>
 
 <!------------------------ Security and privacy ------------------------------>
@@ -295,11 +264,16 @@ Style guide to contributors:
         This API must be only exposed to trusted content.
       </p>
       
-      <p>
-        To use this API an application must state a request to get the 
-        permission to use the API in the application's manifest. The permission name 
-        for this API is <code>raw-socket</code>. See [[!SYSAPPS-RUNTIME]].
-      </p>
+      <p class="issue">
+        There is ongoing work on trust and permissions in W3C. For example see 
+        <a href = "http://www.w3.org/2014/07/permissions/minutes.html">Workshop 
+        on trust and permissions for Web applications 3–4 September 2014, Paris, 
+        France</a>. The assumption is that this API must only be exposed to trusted
+        content according to a security model based on existing web security 
+        mechanisms such as tls/ssl, signed manifests, csp, etc. The details of 
+        that security model as such is out of scope for this specification as this 
+        model should apply to any security and privacy sensitive API.  
+      </p>   
       
     </section>    
 
@@ -912,9 +886,9 @@ Style guide to contributors:
        // connection or an error causing the TCP connection to be closed.
        mySocket.closed.then(
          () => {
-            console.log("Socket has been cleanly closed");
+            console.log("TCP socket has been cleanly closed");
          },
-         e => console.error("Socket closed due to error: ", e);
+         e => console.error("TCP socket closed due to error: ", e);
        );
         
       </pre>      
@@ -1326,58 +1300,88 @@ Style guide to contributors:
       <h2>Interface <a>TCPServerSocket</a></h2>
       <p>The <a>TCPServerSocket</a> interface supports TCP server sockets that 
          listens to connection attempts from TCP clients</p> 
-      
+           
       <pre class="example highlight">
-        // 
-        // This example shows a simple TCP echo server. 
-        // The server will listen on port 6789 and respond back with what ever 
-        // has been sent to the server.
-        //        
-        try {
-            //  Create a new server socket that listens on port 6789
-            var myServerSocket = new TCPServerSocket({
-                "localPort": 6789
-            });
+      // 
+      // This example shows a simple TCP echo server. 
+      // The server will listen on port 6789 and respond back with whatever 
+      // has been sent to the server.
+      //        
+       //  Create a new server socket that listens on port 6789
+       var myServerSocket = new TCPServerSocket({"localPort": 6789});
 
-            // The TCP server Socket has been created successfully       
-            myServerSocket.onopen = function () {
+       // Listen for connection attempts from TCP clients.
+       listenForConnections();
+       function listenForConnections() {
+         myServerSocket.listen().then(
+             connectedSocket => {
+             // A connection has been accepted
+             
+               console.log ("Connection accepted from address: " + 
+                             connectedSocket.remoteAddress + " port: " + 
+                             connectedSocket.remotePort);         
+               // Wait for data
+               waitForData ();
+               function waitForData () {  
+                 connectedSocket.readable.wait().then(
+                   () => {                   
+                       // Data in buffer, read it
+                       var receivedData = connectedSocket.readable.read();
+                       console.log ("Received: " + receivedData);
+                       
+                       // Send data back
+                       connected.writeable.write(receivedData).then(
+                         () => {                         
+                           console.log ("Sending data succeeded");                      
+                         },
+                         e => console.error("Failed to send: ", e);     
+                       },
+                       // Continue to wait for data
+                       waitForData ();
+                   },                        
+                   e => {
+                     console.error("Error in connection: ", e);
+                     // Continue to wait for data
+                     waitForData ();
+                   }  
+                 );
+               
+               }
+                    
+               // Continue to listen for new connections
+               listenForConnections();    
+             },
+             e => {
+               console.error("A client connection attempt failed: ", e);
 
-                myServerSocket.onconnect = function (connectEvent) {
-                    var connectedSocket = connectEvent.connectedSocket;
-                    // Read the data
-                    connectedSocket.ondata = function (messageEvent) {
-                        var data = messageEvent.data;
-                        try {
-                            // Send data back to client
-                            var moreBufferingOK = connectedSocket.send(data);
-                            console.log('Response sent to client!');
-                        } catch (err) {
-                            // Sending failed      
-                            console.error('Sending failed: ' + err.name);
-                        }
-                    };
+               // Continue to listen for new connections
+               listenForConnections();                  
+             }  
+  
+         );
+       }
 
-                    // Connection has been closed 
-                    connectedSocket.onclose = function {
-                        console.log('Connection has been closed');
-                    };
+       // Log result of TCP server socket creation attempt. 
+       myServerSocket.opened.then(
+         () => {
+           console.log("TCP server socket created sucessfully");
+         },
+         e =>console.error("TCP server socket creation failed due to error: ", e);
+       );
+       
+       // Handle TCP server closed, either as a result of the application 
+       // calling myServerSocket.close() or due to an error.
+       myServerSocket.closed.then(
+         () => {
+            console.log("TCP server socket has been cleanly closed");
+         },
+         e => console.error("TCP server socket closed due to error: ", e);
+       );
 
-                };
-
-            };
-
-            // Handle errors
-            myServerSocket.onerror = function (err) {
-                console.error('Error: ' + err.name);
-            };
-        } catch (err) {
-            // Handle runtime exception    
-            console.error('Could not create a TCP server socket: ' + err.name);
-        }
-      </pre>   
+      </pre>        
       
       <dl title="[Constructor (optional TCPServerOptions options)] 
-                 interface TCPServerSocket : EventTarget"
+                 interface TCPServerSocket"
           class="idl">                
         
         <dt>readonly attribute DOMString localAddress</dt>
@@ -1404,63 +1408,58 @@ Style guide to contributors:
         <dt>readonly attribute SocketReadyState readyState</dt>
         <dd>The state of the TCP server object. A TCP server socket object can 
             be in "open", "opening" or "closed" states. See enum <a>SocketReadyState</a> 
-            for details. </dd>        
+            for details. </dd>       
             
-        <dt>attribute EventHandler onopen</dt>
-        <dd>Event handler that corresponds to the <code>open</code> event, which 
-            is fired when the socket is open and ready to receive connection 
-            attempts from clients. If the creation of the server socket fails 
-            the <code>error</code> event will be fired instead.</dd>               
+        <dt> readonly attribute Promise opened</dt>
+        <dd> Detects the result of the TCP server socket opening process when 
+             the socket is ready to receive connection attempts from clients. 
+             Returns the <code>openedPromise</code> that was created in the 
+             <code>TCPServerSocket</code> constructor.    
+        </dd>   
+        
+        <dt> readonly attribute Promise closed</dt>
+        <dd> Detects when the TCP server socket been closed, either cleanly 
+             by the client application calling <code>close()</code>) or through 
+             an error situation. Returns the <code>closedPromise</code> that 
+             was created in the <code>TCPSocket</code> constructor.    
+        </dd>                                              
+            
+        <dt> Promise listen()</dt>
+        <dd>        
+          <p>Listens for incoming connection attempts on the specified port and 
+             address. Returns the <code>connectionPromise</code>, which is for 
+             a succeful connection resolved with the <code>TCPSocket</code> 
+             object for the accepted TCP connection and rejected with
+             DOMException <code>"NetworkError"</code> if there is an error on 
+             an incoming connection attempt.</p>        
+        </dd> 
 
-        <dt>attribute EventHandler onconnect</dt>
-        <dd>Event handler that corresponds to the <code>connect</code> event, 
-            which is fired repeatedly and asynchronously after the TCPServerSocket 
-            object has been created, every time an incoming connection attempt 
-            on the specified port and address has been accepted.</dd> 
-        
-        <dt>attribute EventHandler onerror</dt>
-        <dd>Event handler that corresponds to the <code>error</code> event, which 
-            is fired when there is an error on the server socket. The data 
-            attribute of the event passed to the onerror handler will have a 
-            description of the kind of error.</dd>   
-            
-        <dt>attribute EventHandler onconnecterror</dt>
-        <dd>Event handler that corresponds to the <code>connecterror</code> event, 
-            which is fired repeatedly and asynchronously after the TCPServerSocket 
-            object has been created, every time there is an error on an incoming 
-            connection attempt. The data attribute of the event passed to the 
-            onconnecterror handler will have a description of the kind of error.</dd>              
-            
-        <dt> void close()</dt>
+        <dt> Promise close()</dt>
         <dd>        
-          <p>Closes the TCP server socket, i.e. listening for incoming connections 
-             is stopped. Existing TCP connections are kept open.</p>        
-        </dd>     
-        
-        <dt> void suspend()</dt>
-        <dd>        
-          <p>Pause listening for incoming connections and invocations of the 
-             <code>onconnecion</code> handler until resume() is called.</p>        
-        </dd>    
-        
-        <dt> void resume()</dt>
-        <dd>        
-          <p>Resume listening for incoming connections and invocations of the 
-             <code>onconnecion</code> handler as usual.</p>        
-        </dd>                                                                   
+          <p>Closes the TCP server socket. If <code>listen()</code> has been 
+             called the listening for incoming connections is stopped but existing 
+             TCP connections are kept open. Returns the 
+             <code>closedPromise</code> that was created in the 
+             <code>TCPServerSocket</code> constructor. </p>        
+        </dd>                                                                      
                             
       </dl>   
       
       <p>When the <a>TCPServerSocket</a> constructor is invoked, the User Agent 
          MUST run the following steps:        
         <ol>
+         <li>Create a new <a>TCPServerSocket</a> object ("<code>myServerSocket</code>").
          <li>If the <code>options</code> argument's <code>localAddress</code> 
              member is absent the server will accept connections directed to 
              any IPv4 address and the <code>localAddress</code> attribute is
              set to <code>null</code>. 
-             Otherwise, bind the socket to the IPv4/6 address of the requested 
-             local interface and set the <code>localAddress</code> attribute to 
-             the local address that the socket is bound to.
+             Otherwise, if the requested local address is a valid IPv4/6 address
+             for a local interface on the device bind the server socket to this
+             local IPv4/6 address and set the <code>localAddress</code> 
+             attribute to this address. Else, if the <code>localAddress</code> 
+             member is present but it is not a valid local IPv4/6 address for a
+             local interface on the device, throw DOMException <code>InvalidAccessError</code> 
+             and abort the remaining steps. 
          <li>If the <code>options</code> argument's <code>localPort</code> member
              is absent then bind the socket to an ephemeral local port decided 
              by the system and set the <code>localPort</code> attribute to 
@@ -1472,7 +1471,13 @@ Style guide to contributors:
              <code>options</code> argument's <code>addressReuse</code> member 
              if it is present or to <code>true</code> if the <code>options</code> 
              argument's <code>addressReuse</code> member is not present.                                             
-         <li>Set the <code>mySocket.readyState</code> attribute to "opening".   
+         <li>Set the <code>myServerSocket.readyState</code> attribute to "opening".  
+         <li>Create a new promise, "<code>openedPromise</code>", and store 
+             it so it can later be returned by the <code>opened</code> 
+             property.    
+         <li>Create a new promise, "<code>closedPromise</code>", and store 
+             it so it can later be returned by the <code>closed</code> 
+             property and the <code>close</code> method.               
          <li>Return the newly created <a>TCPServerSocket</a> object to the 
              application.
         </ol>
@@ -1484,15 +1489,61 @@ Style guide to contributors:
          <li>If a TCP connection setup is in progress the connection setup is 
              finalized according to the descriptions below.
          <li>Stop listening to further connection attempts from clients.  
-         <li>Set the <code>mySocket.readyState</code> attribute to "closed".       
+         <li>Set the <code>myServerSocket.readyState</code> attribute to "closed".
+         <li>Resolve <code>closedPromise</code> with 
+             <code>undefined</code>.       
         </ol>
-      </p>                  
+      </p>         
+      
+      <p> The <dfn><code>listen</code></dfn> method when invoked MUST run the 
+          following steps:
+        <ol>
+         <li>If <code>myServerSocket.readyState</code> attribute is"closed" then
+             throw DOMException <code>"InvalidStateError"</code> and abort the 
+             remaining steps.
+         <li>Create a new promise, "<code>connectionPromise</code>".
+         <li>Start listening for connections on the specified local port 
+             and address. Return <code>connectionPromise</code>.          
+        </ol>
+      </p>                    
+      
+      <p>When a new TCP server socket has successfully been created the 
+         <a>user agent</a> MUST run the following steps:
+      
+        <ol>
+          <li>Change the <code>myServerSocket.readyState</code> attribute's value to "open".  
+          <li>Resolve <code>openedPromise</code> with <code>undefined</code>.          
+        </ol>
+      </p>       
+      
+      <p>When the attempt to create a new TCP server socket 
+         (<code>myServerSocket.readyState</code> is "opening") has failed the 
+         <a>user agent</a> MUST run the following steps:
+      
+        <ol>
+          <li>Change the <code>myServerSocket.readyState</code> attribute's value to 
+              "closed".  
+          <li>Reject <code>openedPromise</code> with DOMException 
+              <code>"NetworkError"</code>.   
+        </ol>              
+      </p>    
+      
+      <p>When there is an error on an established TCP server socket 
+         (<code>myServerSocket.readyState</code> is "open"), e.g. loss of network
+         contact, the <a>user agent</a> MUST run the following steps:
+      
+        <ol>
+          <li>Change the <code>myServerSocket.readyState</code> attribute's value to 
+              "closed".  
+          <li>Reject <code>closedPromise</code> with DOMException 
+              <code>"NetworkError"</code>.   
+        </ol>              
+      </p>     
       
       <p>Upon a new successful connection to the TCP server socket the 
          <a>user agent</a> MUST run the following steps:
       
         <ol>
-          <li>Create a new instance of <a>ConnectEvent</a>.
           <li>Let <var>socket</var> be a new instance of <a>TCPSocket</a>.
           <li>Set the <code>remoteAddress</code> attribute of <var>socket</var> 
               to the IPv4/6 address of the peer.    
@@ -1502,150 +1553,26 @@ Style guide to contributors:
               to the used local IPv4/6 address.    
           <li>Set the <code>localPort</code> attribute of <var>socket</var> to 
               the used local source port.   
-          <li>Set the <code>mySocket.readyState</code> attribute of <var>socket</var> 
+          <li>Set the <code>readyState</code> attribute of <var>socket</var> 
               to "open".    
           <li>Set the <code>bufferedAmount</code> attribute of <var>socket</var> 
-              to 0.                                                      
-          <li>Set the <code>connectedSocket</code> attribute of the 
-              <a>ConnectEvent</a> object to <var>socket</var>.
-
-          <li><a>queue a task</a> to <a>fire an event</a> named 
-              <code><a>connect</a></code> with the newly created 
-              <a>ConnectEvent</a> instance at the <a>TCPServerSocket</a> object.
+              to 0.                 
+          <li>Resolve <code>connectionPromise</code> with <var>socket</var> as
+              argument.                                                                   
         </ol>
-      </p>     
-      
-      <p>When a new TCP server socket has successfully been created the 
-         <a>user agent</a> MUST run the following steps:
-      
-        <ol>
-          <li>Change the <code>mySocket.readyState</code> attribute's value to "open".    
-          <li>Start listening for connections on the specified local port 
-              and address.          
-          <li><a>queue a task</a> to <a>fire an event</a> named 
-              <code><a>open</a></code> at the <a>TCPServerSocket</a> object.
-        </ol>
-      </p>       
-      
-      <p>When the attempt to create a new TCP server socket 
-         (<code>mySocket.readyState</code> is "opening") has failed the <a>user agent</a> 
-         MUST run the following steps:
-      
-        <ol>
-          <li>Change the <code>mySocket.readyState</code> attribute's value to "closed".  
-          <li>Create a new instance of <a>SocketErrorEvent</a>.      
-          <li>Set the <code>error.name</code> attribute of the <a>SocketErrorEvent</a> 
-              object to "NetworkError".  
-          <li>Set the <code>error.type</code> attribute of the <a>SocketErrorEvent</a> 
-              object to the reason for the failed socket creation attempt. See enum
-              <a>SocketErrorType</a>.                      
-          <li>Set the <code>error.message</code> attribute of the 
-              <a>SocketErrorEvent</a> object to an informative message 
-              stating the reason for the error.           
-          <li><a>queue a task</a> to <a>fire an event</a> named 
-              <code><a>error</a></code> with the newly created <a>SocketErrorEvent</a> 
-              instance at the <a>TCPServerSocket</a> object.
-        </ol>          
-        
-      </p>                
+      </p>                                
       
       <p>Upon a new connection attempt to the TCP server socket that can not be 
          served, e.g. due to max number of open connections, the <a>user agent</a> 
          MUST run the following steps:
       
         <ol>
-          <li>Create a new instance of <a>SocketErrorEvent</a>.      
-          <li>Set the <code>error.name</code> attribute of the <a>SocketErrorEvent</a> 
-              object to "NetworkError".  
-          <li>Set the <code>error.type</code> attribute of the <a>SocketErrorEvent</a> 
-              object to the reason for the failed socket creation attempt. See 
-              enum <a>SocketErrorType</a>.                     
-          <li>Set the <code>error.message</code> attribute of the 
-              <a>SocketErrorEvent</a> object to an informative message 
-              stating the reason for the error.                 
-          <li><a>queue a task</a> to <a>fire an event</a> named 
-              <code><a>connecterror</a></code> with the newly created
-              <a>SocketErrorEvent</a> instance at the <a>TCPServerSocket</a> object.
+          <li>Reject <code>connectionPromise</code> with DOMException 
+              <code>"NetworkError"</code>.   
         </ol>
       </p>        
 
-      <section>
-        <h2>Event handlers</h2>
-        <p>Below is a list of <a>event handler</a> and corresponding 
-           <a>event handler event types</a> that MUST be supported as attributes 
-           by the <a>TCPServerSocket</a> object.</p>
-        
-        <table class="simple">
-          <thead>
-            <tr>
-              <th>event handler</th>
-              <th>event handler event type</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong><code>onopen</code></strong></td>
-              <td><code><dfn>open</dfn></code></td>
-            </tr>           
-            <tr>
-              <td><strong><code>onconnect</code></strong></td>
-              <td><code><dfn>connect</dfn></code></td>
-            </tr> 
-            <tr>
-              <td><strong><code>onerror</code></strong></td>
-              <td><code><dfn>error</dfn></code></td>
-            </tr>    
-            <tr>
-              <td><strong><code>onconnecterror</code></strong></td>
-              <td><code><dfn>connecterror</dfn></code></td>
-            </tr>                                                
-          </tbody>
-        </table>
-
-        <p>The <code>connect</code> event MUST implement the 
-           <a>ConnectEvent</a> interface. </p>  
-        <p>The <code>error</code> event and the <code>connecterror</code> 
-           event MUST implement the <a>SocketErrorEvent</a> interface. </p>                
-
-      </section>
-          
     </section>           
-    
-<!------------------------ Interface ConnectEvent ------------------------------>   
-    <section>
-      <h2>Interface <a>ConnectEvent</a></h2>
-      <p>The <a>ConnectEvent</a> interface represents events related to accepted 
-         connections to a TCP server socket.</p>
-      <dl title="interface ConnectEvent : Event"
-          class="idl">
-        <dt>readonly attribute TCPSocket connectedSocket </dt>
-        <dd>The new TCP socket object for the accepted socket. This new socket 
-            object is to be used for further communication with the client.</dd>        
-      </dl>
-    </section>        
-    
-<!------------------------ Interface SocketErrorEvent -------------------------->   
-    <section>
-      <h2>Interface <a>SocketErrorEvent</a></h2>
-      <p>The <a>SocketErrorEvent</a> interface represents events stating errors.</p>
-      <dl title="interface SocketErrorEvent : Event"
-          class="idl">
-        <dt>readonly attribute SocketError error</dt>
-        <dd>The detected error.</dd>        
-      </dl>
-    </section>         
-    
-<!------------------------ Interface SocketError ------------------------------>        
-    <section>
-      <h2>Interface <a>SocketError</a></h2>
-      <p>The <a>SocketError</a> interface represents errors in the Raw Socket API.</p>
-      <dl title="interface SocketError : DOMError"
-          class="idl">
-        <dt>readonly attribute SocketErrorType type</dt>
-        <dd>Error type specific for the socket API that details the error in 
-            addition to the error names defined for DOMError, [[!DOM]].</dd>        
-      </dl>
-    </section>  
     
 <!------------------------ Dictionary UDPMessage ------------------------------>          
     <section>
@@ -1818,49 +1745,15 @@ Style guide to contributors:
               by the application, which means that it is not possible to send data 
               but it is still possible to receive.</dd>                      
         </dl>          
-      </section>         
-      
-      <section>
-        
-        <h3>SocketErrorType</h3>
-      
-        <dl id='enum-basic' class='idl' title='enum SocketErrorType'>
-          <dt>no_network_contact</dt>
-          <dd>There is no contact with the network.</dd>
-          <dt>udp_error</dt>
-          <dd>There is an error in the underlying udp protocol layer.</dd> 
-          <dt>tcp_error</dt>
-          <dd>There is an error in the underlying tcp protocol layer.</dd>  
-          <dt>tcp_peer_does_not_respond</dt>
-          <dd>Peer does not respond to the TCP connection attempt.</dd>   
-          <dt>tcp_connection_not_accepted</dt>
-          <dd>Peer does not accept the TCP connection attempt.</dd>              
-          <dt>tcp_connection_lost</dt>
-          <dd>The TCP connection was lost.</dd>  
-          <dt>received_data_error</dt>                    
-          <dd>The received data can not be convertet to ArrayBuffer.</dd>                                  
-          <dt>local_address_port_already_in_use</dt>
-          <dd>It is not possible to bind the socket to the requested 
-              local address/port pair as it is already in use.</dd>          
-          <dt>send_buffer_full</dt>
-          <dd>The send buffer is full. Application should wait for a 
-              <code>drain</code> event</dd>    
-          <dt>tcp_server_max_connections</dt>                    
-          <dd>The TCP server can not accept more connections as the number of
-              max open connections is reached.</dd>  
-          <dt>tcp_server_connection_not_accepted</dt>                    
-          <dd>The TCP server does not accept the connection attempt.</dd>                
-                                                                      
-        </dl>          
-      </section>           
-            
+      </section>        
+                  
     </section>    
            
 <!------------------------ Appendix ------------------------------>   
     <section class='appendix'>
       <h2>Acknowledgements</h2>
       <p>
-        Many thanks to Marcos Caceres, Jonas Sicking, Ke-Fong Lin and 
+        Many thanks to Domenic Denicola, Marcos Caceres, Jonas Sicking, Ke-Fong Lin and 
         Alexandre Morgaut for reviewing the specification and providing very 
         valuable feedback. Also thanks to Sony colleagues Anders Edenbrandt,
         Anders Isberg and Björn Isaksson for sharing their experience on 
