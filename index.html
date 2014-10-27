@@ -184,7 +184,7 @@ Style guide to contributors:
           <a href="https://github.com/w3ctag/promises-guide#rejection-reasons-should-be-errors">Promise rejection reasons</a>.
           In the TCP and UDP Socket API the error names defined in <a href="http://heycam.github.io/webidl/#idl-DOMException-error-names">
           WebIDL Exceptions</a> are used. If additional error names are needed an update to <a href="https://github.com/heycam/webidl/">
-          Github WebIDL</a> should be requested though a Pull Request. 
+          Github WebIDL</a> should be requested through a Pull Request. 
         </p>
 
       </div>    
@@ -403,7 +403,7 @@ Style guide to contributors:
             argument in the constructor. Default is <code>true</code>.</dd>
             
         <dt>readonly attribute boolean loopback</dt>
-        <dd>Only applicable for multicast.<code>true</code> means that sent 
+        <dd>Only applicable for multicast. <code>true</code> means that sent 
             multicast data is looped back to the sender.           
             Can be set by the <code>options</code> argument in the constructor.  
             Default is <code>false</code>.</dd>                          
@@ -413,7 +413,7 @@ Style guide to contributors:
             "opening" or "closed" states. See enum <a>SocketReadyState</a> for details. </dd> 
             
         <dt> readonly attribute Promise opened</dt>
-        <dd> Detects the result of the UDP socket creation attempt.Returns 
+        <dd> Detects the result of the UDP socket creation attempt. Returns 
              the <code>openedPromise</code> that was created in the 
              <code>UDPSocket</code> constructor.    
         </dd>  
@@ -762,19 +762,19 @@ Style guide to contributors:
                    function MUST run the following steps:
                    <ol>
                      <li>Create a new promise, "<code>writePromise</code>"
-                     <li>Let the <code>chunk</code> argument be the result of 
-                         converting data to an <a>UDPMessage</a> (per 
-                         [[!WEBIDL]] dictionary conversion).
+                     <li>Convert the <code>chunk</code> argument to a 
+                         <a>UDPMessage</a> object (per [[!WEBIDL]] dictionary 
+                         conversion).
                      <li>If no default remote address was specified in the 
                          UDPSocket's constructor <code>options</code> argument's 
                          <code>remoteAddress</code> member and the 
-                         <a>UDPMesssage</a> object's <code>remoteAddress</code> 
+                         <a>UDPMessage</a> object's <code>remoteAddress</code> 
                          member is not present or null then throw DOMException 
                          <code>InvalidAccessError</code> and abort these steps.   
                      <li>If no default remote port was specified in the 
                          UDPSocket's constructor <code>options</code> argument's 
                          <code>remotePort</code> member and the 
-                         <a>UDPMesssage</a> object's <code>remotePort</code> 
+                         <a>UDPMessage</a> object's <code>remotePort</code> 
                          member is not present or null then throw DOMException 
                          <code>InvalidAccessError</code> and abort these steps.                      
                      <li>Send UDP data with data passed in the <code>data</code> 
@@ -1164,9 +1164,10 @@ Style guide to contributors:
                        <li>If <code>mySocket.readyState</code> is "closing" or "closed" then 
                            do nothing and abort the remaning steps.    
                        <li>If <code>mySocket.readyState</code> is "opening" then fail the 
-                           connection attempt, reject <code>openedPromise</code>
-                           with DOMException <code>AbortError</code> and set the 
-                           <code>mySocket.readyState</code> attribute to "closing".                     
+                           connection attempt, reject <code>openedPromise</code> and
+                           <code>closedPromise</code> with DOMException 
+                           <code>AbortError</code> and set the <code>mySocket.readyState</code>
+                           attribute to "closing".                     
                        <li>If <code>mySocket.readyState</code> is "open" then the 
                            following steps MUST run:
                            <ol>  
@@ -1525,6 +1526,8 @@ Style guide to contributors:
               "closed".  
           <li>Reject <code>openedPromise</code> with DOMException 
               <code>"NetworkError"</code>.   
+          <li>Reject <code>closedPromise</code> with DOMException 
+              <code>"NetworkError"</code>.                
         </ol>              
       </p>    
       
@@ -1629,7 +1632,7 @@ Style guide to contributors:
             already is in use. Default is <code>true</code>.</dd>
             
         <dt>boolean loopback</dt>
-        <dd>Only applicable for multicast.<code>true</code> means that sent 
+        <dd>Only applicable for multicast. <code>true</code> means that sent 
             multicast data is looped back to the sender. 
             Default is <code>false</code>.</dd>     
    
