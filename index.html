@@ -181,7 +181,7 @@ Style guide to contributors:
           When using promises rejection reasons should always be instances of 
           the ECMAScript Error type such as DOMException or the built in 
           ECMAScript error types. See 
-          <a href="https://github.com/w3ctag/promises-guide#rejection-reasons-should-be-errors">Promise rejection reasons</a>.
+          <a href="http://www.w3.org/2001/tag/doc/promises-guide#errors">Promise rejection reasons</a>.
           In the TCP and UDP Socket API the error names defined in <a href="http://heycam.github.io/webidl/#idl-DOMException-error-names">
           WebIDL Exceptions</a> are used. If additional error names are needed an update to <a href="https://github.com/heycam/webidl/">
           Github WebIDL</a> should be requested through a Pull Request. 
@@ -248,10 +248,18 @@ Style guide to contributors:
     <section>
       <h2>Terminology</h2>
       
-       <p>The <dfn id="promise"><code><a href="http://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise-objects">Promise</a></code></dfn> 
-          interface provides asynchronous access to the result of an operation 
-          that is ongoing, has yet to start, or has completed, as defined in
-          [[!ES6]].
+      <p>
+        The term <dfn>webapp</dfn> refers to a Web application, i.e. an
+        application implemented using Web technologies, and executing within
+        the context of a Web <a>user agent</a>, e.g. a Web browser or other 
+        Web runtime environment.
+      </p>
+      
+      <p>
+        The <dfn id="promise"><code><a href="http://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise-objects">Promise</a></code></dfn> 
+        interface provides asynchronous access to the result of an operation 
+        that is ongoing, has yet to start, or has completed, as defined in
+        [[!ES6]].
 
       </p>
       
@@ -261,22 +269,195 @@ Style guide to contributors:
     <section>
       <h2>Security and privacy considerations</h2>
       <p>
-        This API must be only exposed to trusted content.
+        This is a security and privacy sensitive API and a <a>webapp</a> must
+        have permission to use the API. The manner in which permission is given 
+        or not varies depending on the type of web runtime environment in which 
+        this API is implemented and could be based on:
+        <ul>
+          <li>Consent through user interaction.</li>
+          <li>Previously granted or denied permission explicitly for this webapp.
+          <li>Explicit trust for the requesting <a>webapp</a> based on the 
+              security system of the web runtime this API is implemented in.</li>
+          <li>A combination of above.</li>       
+        </ul>
       </p>
       
-      <p class="issue">
-        There is ongoing work on trust and permissions in W3C. For example see 
-        <a href = "http://www.w3.org/2014/07/permissions/minutes.html">Workshop 
-        on trust and permissions for Web applications 3–4 September 2014, Paris, 
-        France</a>. The assumption is that this API must only be exposed to trusted
-        content according to a security model based on existing web security 
-        mechanisms such as tls/ssl, signed manifests, csp, etc. The details of 
-        that security model as such is out of scope for this specification as this 
-        model should apply to any security and privacy sensitive API.  
+      <p>
+        The <a>UDPPermission</a>, <a>TCPPermission</a> and <a>TCPServerPermission</a>
+        interfaces provides a method <code>hasPermission</code> that retrieves 
+        the permission state for the requesting <a>webapp</a> and a method 
+        <code>requestPermission</code> that requests permission for the <a>webapp</a>
+        to use the socket interface. If a <a>webapp</a> calls the contructor of a 
+        socket interface for which it has not permission to access the
+        <a>user agent</a> MUST immediately throw DOMException
+        <code>"SecurityError"</code>.       
+      </p>
+            
+      <p class="note">
+        The idea behind the <a>UDPPermission</a>, <a>TCPPermission</a> and 
+        <a>TCPServerPermission</a> interfaces is to isolate the permission 
+        system from the socket interfaces specifications. The manner in which 
+        permission to use this API differs depending on the type of web runtime 
+        it is implemented in. For example, a web runtime for secure installed 
+        web applications may be able to open up this API so that no explicit 
+        user content is needed, while an implementation in a web browser may 
+        use a combination of web security mechanisms, such as secure transport
+        (https:), content security policies (CSP) and a signed manifest,
+        and user consent to open up the API.</br></br>    
+        The <a href="https://w3c.github.io/permissions/">Permissions API</a>,
+        which currently is an unofficial draft, is an API that allows a web
+        application to be aware of the status of a given permission, to know 
+        whether it is granted, denied or if the user will be asked whether the
+        permission should be granted or not. If this API gets consensus and 
+        becomes a W3C standard, and also is extended to support permission
+        requests, it may be possible to replace the <code>hasPermission</code> 
+        and <code>requestPermission</code> methods with a reference to the 
+        Permission API. </br></br>      
+        W3C has activities on Trust and permissions. For example, see 
+        <a href = "http://www.w3.org/2014/07/permissions/minutes.html">
+        Workshop on trust and permissions for Web applications 3–4 September
+        2014, Paris, France</a> and the proposed <a href = "http://www.w3.org/2014/11/trust-and-permissions-cg-charter.html">Community Group</a>.  
+        </br></br>
+        The CSP directive <a href="https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-1.0-specification.html#connect-src">connect-src</a> 
+        is used to restrict the allowed connection targets for XHR, Web Sockets 
+        and Server-Sent Events. It should be considered if <a href="https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-1.0-specification.html#connect-src">connect-src</a>
+        should be extended to support allowed remote peers for raw TCP and UDP
+        sockets as well. However, currently the allowed connection targets for <a href="https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-1.0-specification.html#connect-src">connect-src</a>
+        are defined as a <a href="https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-1.0-specification.html#source-list">Source List</a> 
+        and this assumes URI schemes. So, schemes for UDP and TCP, i.e. udp:
+        and tcp:, might have to be defined. See <a href="https://github.com/sysapps/tcp-udp-sockets/issues/17">address + port vs uri</a>. 
       </p>   
       
-    </section>    
+    </section>       
+    
+<!------------------------ Interface Navigator  ------------------------------>        
+    <section>
+      <h2><a>Navigator</a> Interface</h2>
+       <dl title="partial interface Navigator" class="idl">
+        <dt>readonly attribute UDPPermission udpPermission</dt>
+        <dd>
+          The object that exposes permission for access to the UDPSocket interface.
+        </dd>
+        <dt>readonly attribute TCPPermission tcpPermission</dt>
+        <dd>
+          The object that exposes permissions for access to the TCPSocket interface.
+        </dd>        
+        <dt>readonly attribute TCPServerPermission tcpServerPermission</dt>
+        <dd>
+          The object that exposes permissions for access to the TCPServerSocket interface.
+        </dd>        
+      </dl>
+    </section>      
+    
+<!------------------------ Interface TCPPermission  ------------------------------>  
+    <section>
+       <h2><a>TCPPermission</a> Interface</h2>
+       <p>
+         This interface exposes methods related to the permission to access
+         the TCPSocket interface. Permission could be given based on user
+         consent, based on trust for the <a>webapp</a>, e.g. related to the 
+         origin of it and verified through web security mechanisms such as 
+         secure transport and signatures, based on previously granted or 
+         denied permission explicitly for this webapp or a combination of 
+         these mechanisms.
+       </p> 
+         
+       <dl title="interface TCPPermission" class="idl">
+         
+         <dt>
+           Promise&lt;TCPUDPPermissionState&gt; hasPermission ()
+         </dt>
+         <dd>
+           Retrieves the permission state (<a>TCPUDPPermissionState</a>) of the 
+           requesting <a>webapp</a> for creating a <a>TCPSocket</a> object. The 
+           method returns a <a>Promise</a>, which is resolved with the permission
+           state as argument.
+           <p>
+             This method MUST run the following steps asynchronously:
+             <ol>
+               <li>Create a new <a>Promise</a>, <code>tcpPermissionPromise</code>,
+                   return it and run the remaining steps asynchronously.</li>                   
+               <li>Retrieve the permission state of the requesting <a>webapp</a>
+                   for creating a <a>TCPSocket</a> object that connects to the
+                   requested remote address and port.</li>
+               <li>If there is an error, reject <code>tcpPermissionPromise</code>
+                   with no arguments and abort the remaining steps.</li>
+               <li>When the request has been completed, resolve <code>tcpPermissionPromise</code>
+                   with <a>TCPUDPPermissionState</a> providing the permission
+                   state. </li>   
+             </ol>      
+           </p>             
+           
+           <dl class='parameters'>
+               
+             <dt>DOMString remoteAddress</dt>
+             <dd>
+               The host name or IPv4/6 address of the peer.
+             </dd> 
+             
+             <dt>unsigned short remotePort</dt>
+             <dd>
+               The port of the peer.
+             </dd>                
+                             
+           </dl>      
+           
+         </dd>    
 
+         <dt>
+           Promise&lt;void&gt; requestPermission ()
+         </dt>
+         <dd>
+           Requests permission to create a <a>TCPSocket</a> object that creates 
+           a connection to the requested remoteAddress and remotePort. The method 
+           returns a <a>Promise</a>, which is resolved if permission was given and 
+           rejected if permission was denied. 
+           <p>
+             This method MUST run the following steps asynchronously:
+             <ol>
+               <li>Create a new <a>Promise</a>, <code>tcpRequestPermissionPromise</code>,
+                   return it and run the remaining steps asynchronously.</li>                   
+               <li>If the requesting <a>webapp</a> is denied to create a 
+                   <a>TCPSocket</a> object that connects to the requested remote
+                   address and port reject <code>tcpRequestPermissionPromise</code>
+                   with DOMException <code>"SecurityError"</code> and
+                   abort the remaining steps.</li>
+               <li>If the requesting <a>webapp</a> is allowed to create a 
+                   <a>TCPSocket</a> object that connects to the requested remote
+                   address and port without user interaction, e.g. based on a 
+                   prearranged trust relationship or the user has already granted
+                   permission explicitly for this <a>webapp</a>, resolve 
+                   <code>tcpRequestPermissionPromise</code> and abort the remaining
+                   steps.</li>
+               <li>Request user consent to create a <a>TCPSocket</a> object 
+                   that connects to the requested remote address and port.</li>
+               <li>If permission was granted, resolve <code>tcpRequestPermissionPromise</code> 
+                   and abort the remaining steps.</li> 
+               <li>If permission was not granted, reject <code>tcpRequestPermissionPromise</code>
+                   with DOMException <code>"SecurityError"</code>. </li>  
+             </ol>      
+           </p>             
+           
+           <dl class='parameters'>
+               
+             <dt>DOMString remoteAddress</dt>
+             <dd>
+               The host name or IPv4/6 address of the peer.
+             </dd> 
+             
+             <dt>unsigned short remotePort</dt>
+             <dd>
+               The port of the peer.
+             </dd>                
+                             
+           </dl>      
+           
+         </dd>    
+
+       </dl>                 
+      
+    </section>          
+    
 <!------------------------ Interface UDPSocket ------------------------------>        
     <section>
       <h2>Interface <a>UDPSocket</a></h2>
@@ -354,7 +535,7 @@ Style guide to contributors:
         
         // Handle UDP socket closed, either as a result of the application 
         // calling mySocket.close() or an error causing the socket to be 
-           closed.
+        // closed.
         mySocket.closed.then(
           () => {
              console.log("Socket has been cleanly closed");
@@ -374,7 +555,7 @@ Style guide to contributors:
             UDPSocket object is bound to. Can be set by the constructor's 
             <code>options</code> argument's <code>localAddress</code> member. If 
             this member is not present but the <code>remoteAddress</code> member is 
-            present, the user agent binds the socket to a local IPv4/6 address 
+            present, the <a>user agent</a> binds the socket to a local IPv4/6 address 
             based on the routing table and possiby a preselect default local 
             interface to use for the selected <code>remoteAddress</code>. Else, 
             i.e. neither the <code>localAddress</code> or the 
@@ -385,7 +566,7 @@ Style guide to contributors:
         <dt>readonly attribute unsigned short? localPort</dt>
         <dd>The local port that the UDPSocket object is bound to. Can be set by 
             the <code>options</code> argument in the constructor. If not set the
-            user agent binds the socket to an ephemeral local port decided by 
+            <a>user agent</a> binds the socket to an ephemeral local port decided by 
             the system and this attribute is null. </dd>             
 
         <dt>readonly attribute DOMString? remoteAddress</dt>
@@ -420,7 +601,7 @@ Style guide to contributors:
         
         <dt> readonly attribute Promise closed</dt>
         <dd> Detects when the UDP socket has been closed, either cleanly by 
-             the client application calling <code>close()</code>) or 
+             the <a>webapp</a> calling <code>close()</code>) or 
              through an error situation, e.g. network contact lost.
              Returns the <code>closedPromise</code> that was created 
              in the <code>UDPSocket</code> constructor.    
@@ -475,7 +656,7 @@ Style guide to contributors:
                             
       </dl>     
  
-      <p>When the <a>UDPSocket</a> constructor is invoked, the User Agent 
+      <p>When the <a>UDPSocket</a> constructor is invoked, the <a>user agent</a> 
          MUST run the following steps:        
         <ol>
          <li>Create a new UDPSocket object ("<code>mySocket</code>").
@@ -585,7 +766,7 @@ Style guide to contributors:
              property and the <code>close</code> method.            
 
          <li>Let the <code>mySocket.readable</code> attribute be a new 
-             ReadableStream object, [[!STREAMS]]. The User Agent MUST implement 
+             ReadableStream object, [[!STREAMS]]. The <a>user agent</a> MUST implement 
              the adaptation layer to [[!STREAMS]] for this new ReadableStream 
              object through implementation of a number of functions that are 
              given as input arguments to the constructor and called by the 
@@ -729,7 +910,7 @@ Style guide to contributors:
                    applies. Currently this means that the ReadableStream 
                    object goes to "readable" state after 1 chunk has been 
                    enqueued to the internal ReadableStream object's input
-                   buffer. An application should call .wait() to be notified 
+                   buffer. A <a>webapp</a> should call .wait() to be notified 
                    when the state changes to "readable". To be further 
                    investigated which ReadableStreamStrategy that should 
                    be applied to UDP.
@@ -737,7 +918,7 @@ Style guide to contributors:
              </ul>                   
                     
          <li>Let the <code>mySocket.writeable</code> attribute be a new 
-             WritableStream object, [[!STREAMS]]. The User Agent MUST implement 
+             WritableStream object, [[!STREAMS]]. The <a>user agent</a> MUST implement 
              the adaptation layer to [[!STREAMS]] for this new WritableStream 
              object through implementation of a number of functions that are 
              given as input arguments to the constructor and called by the 
@@ -808,7 +989,7 @@ Style guide to contributors:
                  applies. Currently this means that the WriteableStream 
                  object goes to "waiting" state after 1 chunk has been 
                  written to the internal WriteableStream object's output
-                 buffer. This means that the application should call .wait() 
+                 buffer. This means that the <a>webapp</a> should call .wait() 
                  to be notified of when the state changes to "writable", 
                  i.e. the queued chunk has been written to the remote peer
                  and more data chunks could be written. To be further 
@@ -818,7 +999,7 @@ Style guide to contributors:
              </ul>
                                        
          <li>Return the newly created <code>UDPSocket</code> object ("<code>mySocket</code>")
-             to the application.
+             to the <a>webapp</a>.
         </ol>       
       </p>              
       
@@ -843,54 +1024,63 @@ Style guide to contributors:
        // This example shows a simple TCP echo client. 
        // The client will send "Hello World" to the server on port 6789 and log 
        // what has been received from the server.
-       //   
+       // 
        
-       //  Create a new TCP client socket and connect to remote host     
-       var mySocket = new TCPSocket("127.0.0.1", 6789);
-       
-       // Send data to server
-       mySocket.writeable.write("Hello World").then(
-           () => {
-               
-               // Data sent sucessfully, wait for response
-               console.log("Data has been sent to server");
-               mySocket.readable.wait().then(
-                   () => {
+       //  Request permission to connect to server at address 127.0.0.1 on port
+       //  6789
+                      
+       navigator.tcpPermission.requestPermission("127.0.0.1", 6789).then(
+         () => {
+           // Permission was granted       
+           // Create a new TCP client socket and connect to remote host     
+           var mySocket = new TCPSocket("127.0.0.1", 6789);
+           
+           // Send data to server
+           mySocket.writeable.write("Hello World").then(
+               () => {
                    
-                       // Data in buffer, read it
-                       console.log("Data received from server:" + mySocket.readable.read());
-       
-                       // Close the TCP connection
-                       mySocket.close();
-                   },
-                    
-                   e => console.error("Receiving error: ", e);
-               );
-           },
-           e => console.error("Sending error: ", e);
-       );
-       
-       // Signal that we won't be writing any more and can close the write half of the connection.
-       mySocket.halfClose();
-
-       // Log result of TCP connection attempt. 
-       mySocket.opened.then(
-         () => {
-           console.log("TCP connection established sucessfully");
+                   // Data sent sucessfully, wait for response
+                   console.log("Data has been sent to server");
+                   mySocket.readable.wait().then(
+                       () => {
+                       
+                           // Data in buffer, read it
+                           console.log("Data received from server:" + mySocket.readable.read());
+           
+                           // Close the TCP connection
+                           mySocket.close();
+                       },
+                        
+                       e => console.error("Receiving error: ", e);
+                   );
+               },
+               e => console.error("Sending error: ", e);
+           );
+           
+           // Signal that we won't be writing any more and can close the write half of the connection.
+           mySocket.halfClose();
+    
+           // Log result of TCP connection attempt. 
+           mySocket.opened.then(
+             () => {
+               console.log("TCP connection established sucessfully");
+             },
+             e =>console.error("TCP connection setup failed due to error: ", e);
+           );
+           
+           // Handle TCP connection closed, either as a result of the webapp 
+           // calling mySocket.close() or the other side closed the TCP  
+           // connection or an error causing the TCP connection to be closed.
+           mySocket.closed.then(
+             () => {
+                console.log("TCP socket has been cleanly closed");
+             },
+             e => console.error("TCP socket closed due to error: ", e);
+           );
          },
-         e =>console.error("TCP connection setup failed due to error: ", e);
-       );
-       
-       // Handle TCP connection closed, either as a result of the application 
-       // calling mySocket.close() or the other side closed the TCP  
-       // connection or an error causing the TCP connection to be closed.
-       mySocket.closed.then(
-         () => {
-            console.log("TCP socket has been cleanly closed");
-         },
-         e => console.error("TCP socket closed due to error: ", e);
-       );
-        
+         e => console.error("Connection to 127.0.0.1 on port 6789 was denied 
+                            due to error: ", e);    
+       ); 
       </pre>      
       
       <dl title="[Constructor (DOMString remoteAddress, unsigned short remotePort, 
@@ -909,7 +1099,7 @@ Style guide to contributors:
         <dt>readonly attribute DOMString localAddress</dt>
         <dd>The IPv4/6 address of the local interface, e.g. wifi or 3G, that the 
             TCPSocket object is bound to. Can be set by the <code>options</code>
-            argument in the constructor. If not set the user agent 
+            argument in the constructor. If not set the <a>user agent</a> 
             binds the socket to an IPv4/6 address based on the routing table and 
             possibly a preselect default local interface to use for the selected 
             <code>remoteAddress</code>. </dd>   
@@ -917,7 +1107,7 @@ Style guide to contributors:
         <dt>readonly attribute unsigned short localPort</dt>
         <dd>The local port that the TCPSocket object is bound to. Can be set by 
             the <code>options</code> argument in the constructor. If not set the
-            user agent binds the socket to an ephemeral local port decided by 
+            <a>user agent</a> binds the socket to an ephemeral local port decided by 
             the system. </dd>  
             
         <dt>readonly attribute boolean addressReuse</dt>
@@ -943,7 +1133,7 @@ Style guide to contributors:
         
         <dt> readonly attribute Promise closed</dt>
         <dd> Detects when the TCP connection has been closed, either cleanly 
-             (initiated either by the server, or by the client application 
+             (initiated either by the server, or by the client <a>webapp</a> 
              calling <code>close()</code>) or through an error situation.
              Returns the <code>closedPromise</code> that was created 
              in the <code>TCPSocket</code> constructor.    
@@ -970,9 +1160,13 @@ Style guide to contributors:
                             
       </dl>          
       
-      <p>When the <a>TCPSocket</a> constructor is invoked, the User Agent MUST 
+      <p>When the <a>TCPSocket</a> constructor is invoked, the <a>user agent</a> MUST 
          run the following steps:        
         <ol>
+         <li>If the <a>webapp</a> does not have permission to create a TCPSocket 
+             object that connects to the <code>remoteAddress</code>/<code>remotePort</code>
+             as stated by the input arguments, then throw DOMException 
+             <code>"SecurityError"</code> and abort the remaining steps.
          <li>Create a new TCPSocket object ("<code>mySocket</code>").
          <li>If the <code>remoteAddress</code> argument is not a valid host name
              or IPv4/6 address and/or the <code>remotePort</code> argument is 
@@ -1031,7 +1225,7 @@ Style guide to contributors:
              property and the <code>close</code> method.               
          
          <li>Let the <code>mySocket.readable</code> attribute be a new 
-             ReadableStream object, [[!STREAMS]]. The User Agent MUST implement 
+             ReadableStream object, [[!STREAMS]]. The <a>user agent</a> MUST implement 
              the adaptation layer to [[!STREAMS]] for this new ReadableStream 
              object through implementation of a number of functions that are 
              given as input arguments to the constructor and called by the 
@@ -1079,7 +1273,7 @@ Style guide to contributors:
                          is a function that closes the readable stream.<br> 
                          Upon detection that the TCP connection has been closed
                          cleanly (initiated either by the server, or by 
-                         the client application calling <code>close()</code>) 
+                         the client <a>webapp</a> calling <code>close()</code>) 
                          through a successful TCP connection closing handshake 
                          the following steps MUST run:      
                          <ol>  
@@ -1188,7 +1382,7 @@ Style guide to contributors:
                    applies. Currently this means that the ReadableStream 
                    object goes to "readable" state after 1 chunk has been 
                    enqueued to the internal ReadableStream object's input
-                   buffer. An application should call .wait() to be notified 
+                   buffer. A <a>webapp</a> should call .wait() to be notified 
                    when the state changes to "readable". To be further 
                    investigated which ReadableStreamStrategy that should 
                    be applied to TCP.
@@ -1196,7 +1390,7 @@ Style guide to contributors:
              </ul>                   
                     
          <li>Let the <code>mySocket.writeable</code> attribute be a new 
-             WritableStream object, [[!STREAMS]]. The User Agent MUST implement 
+             WritableStream object, [[!STREAMS]]. The <a>user agent</a> MUST implement 
              the adaptation layer to [[!STREAMS]] for this new WritableStream 
              object through implementation of a number of functions that are 
              given as input arguments to the constructor and called by the 
@@ -1263,7 +1457,7 @@ Style guide to contributors:
                      applies. Currently this means that the WriteableStream 
                      object goes to "waiting" state after 1 chunk has been 
                      written to the internal WriteableStream object's output
-                     buffer. This means that the application should call .wait() 
+                     buffer. This means that the <a>webapp</a> should call .wait() 
                      to be notified of when the state changes to "writable", 
                      i.e. the queued chunk has been written to the remote peer
                      and more data chunks could be written. To be further 
@@ -1274,7 +1468,7 @@ Style guide to contributors:
              </ul>                                         
                                   
          <li>Return the newly created <a>TCPSocket</a> object ("<code>mySocket</code>") 
-             to the application.
+             to the <a>webapp</a>.
         </ol>
       </p>                               
     
@@ -1370,7 +1564,7 @@ Style guide to contributors:
          e =>console.error("TCP server socket creation failed due to error: ", e);
        );
        
-       // Handle TCP server closed, either as a result of the application 
+       // Handle TCP server closed, either as a result of the webapp
        // calling myServerSocket.close() or due to an error.
        myServerSocket.closed.then(
          () => {
@@ -1396,7 +1590,7 @@ Style guide to contributors:
         <dt>readonly attribute unsigned short localPort</dt>
         <dd>The local port that the TCPServerSocket object is bound to. Can be 
             set by the <code>options</code> argument in the constructor. If not 
-            set the user agent binds the socket to an ephemeral local port 
+            set the <a>user agent</a> binds the socket to an ephemeral local port 
             decided by the system and sets this atribute to <code>null</code>. 
         </dd>       
         
@@ -1420,7 +1614,7 @@ Style guide to contributors:
         
         <dt> readonly attribute Promise closed</dt>
         <dd> Detects when the TCP server socket been closed, either cleanly 
-             by the client application calling <code>close()</code>) or through 
+             by the <a>webapp</a> calling <code>close()</code>) or through 
              an error situation. Returns the <code>closedPromise</code> that 
              was created in the <code>TCPSocket</code> constructor.    
         </dd>                                              
@@ -1446,7 +1640,7 @@ Style guide to contributors:
                             
       </dl>   
       
-      <p>When the <a>TCPServerSocket</a> constructor is invoked, the User Agent 
+      <p>When the <a>TCPServerSocket</a> constructor is invoked, the <a>user agent</a> 
          MUST run the following steps:        
         <ol>
          <li>Create a new <a>TCPServerSocket</a> object ("<code>myServerSocket</code>").
@@ -1480,7 +1674,7 @@ Style guide to contributors:
              it so it can later be returned by the <code>closed</code> 
              property and the <code>close</code> method.               
          <li>Return the newly created <a>TCPServerSocket</a> object to the 
-             application.
+             <a>webapp</a>.
         </ol>
       </p>      
       
@@ -1608,7 +1802,7 @@ Style guide to contributors:
           
         <dt>DOMString localAddress</dt>
         <dd>The IPv4/6 address of the local interface, e.g. wifi or 3G, that the 
-            UDPSocket object is bound to. If the field is omitted, the user agent 
+            UDPSocket object is bound to. If the field is omitted, the <a>user agent</a> 
             binds the socket to an IPv4/6 address based on the routing table and 
             possibly a preselect default local interface to use for the selected 
             <code>remoteAddress</code> if this member is present. Else the 
@@ -1616,7 +1810,7 @@ Style guide to contributors:
         
         <dt>unsigned short localPort</dt>
         <dd>The local port that the UDPSocket object is bound to. If the the field 
-            is omitted, the user agent binds the socket to a an ephemeral local 
+            is omitted, the <a>user agent</a> binds the socket to a an ephemeral local 
             port decided by the system.</dd>             
 
         <dt>DOMString remoteAddress</dt>
@@ -1653,14 +1847,14 @@ Style guide to contributors:
         
         <dt>DOMString localAddress</dt>
         <dd>The IPv4/6 address of the local interface, e.g. wifi or 3G, that the 
-            TCPSocket object is bound to. If the field is omitted, the user agent 
+            TCPSocket object is bound to. If the field is omitted, the <a>user agent</a> 
             binds the socket to an IPv4/6 address based on the routing table and 
             possibly a preselect default local interface to use for the selected 
             <code>remoteAddress</code>. </dd>  
         
         <dt>unsigned short localPort</dt>
         <dd>The local port that the TCPSocket object is bound to. If the the field 
-            is omitted, the user agent binds the socket to an ephemeral local port 
+            is omitted, the <a>user agent</a> binds the socket to an ephemeral local port 
             decided by the system.</dd>    
             
         <dt>boolean addressReuse</dt>
@@ -1698,12 +1892,12 @@ Style guide to contributors:
         <dt>DOMString localAddress</dt>
         <dd>The IPv4/6 address of the interface, e.g. wifi or 3G, that the 
             TCPServerSocket object is bound to. If the field is omitted, the 
-            user agent binds the server socket to the IPv4/6 address of the 
+            <a>user agent</a> binds the server socket to the IPv4/6 address of the 
             default local interface. </dd> 
                      
         <dt>unsigned short localPort</dt>
         <dd>The local port that the TCPServerSocket object is bound to. If the 
-            the field is omitted, the user agent binds the socket to an ephemeral 
+            the field is omitted, the <a>user agent</a> binds the socket to an ephemeral 
             local port decided by the system.</dd>    
             
         <dt>boolean addressReuse</dt>
@@ -1725,6 +1919,23 @@ Style guide to contributors:
 <!------------------------ Enums ------------------------------>   
     <section>
       <h2> Enums </h2>
+      
+      <section>
+        
+        <h3>TCPUDPPermissionState</h3>
+      
+        <dl id='enum-basic' class='idl' title='enum TCPUDPPermissionState'>
+          <dt>granted</dt>
+          <dd>The <a>webapp</a> has permission to use the requested interface.</dd>
+          <dt>denied</dt>
+          <dd>The <a>webapp</a> has been denied permission to use the requested 
+              interface.</dd>
+          <dt>prompt</dt>
+          <dd>The <a>webapp</a> needs to request permission to use the 
+              requested interface by calling <code>requestPermission</code>.</dd>                  
+        </dl>          
+      </section>          
+      
       <section>
         
         <h3>SocketReadyState</h3>
@@ -1745,7 +1956,7 @@ Style guide to contributors:
               For TCP the connection has been closed or could not be opened.</dd>      
           <dt>halfclosed</dt>
           <dd>Only used for TCP sockets. The TCP connection has been "halfclosed"
-              by the application, which means that it is not possible to send data 
+              by the <a>webapp</a>, which means that it is not possible to send data 
               but it is still possible to receive.</dd>                      
         </dl>          
       </section>        
