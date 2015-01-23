@@ -311,12 +311,15 @@ Style guide to contributors:
         permission should be granted or not. If this API gets consensus and 
         becomes a W3C standard, and also is extended to support permission
         requests, it may be possible to replace the <code>hasPermission</code> 
-        and <code>requestPermission</code> methods with a reference to the 
-        Permission API. </br></br>      
-        W3C has activities on Trust and permissions. For example, see 
+        and <code>requestPermission</code> methods in this specification with
+        a reference to the Permission API. </br></br>      
+        W3C has activities on security for web applications, see
+        <a href = "http://www.w3.org/2011/webappsec/">Web Application Security Working Group</a>
+        and on trust and permissions, see 
         <a href = "http://www.w3.org/2014/07/permissions/minutes.html">
         Workshop on trust and permissions for Web applications 3–4 September
-        2014, Paris, France</a> and the proposed <a href = "http://www.w3.org/2014/11/trust-and-permissions-cg-charter.html">Community Group</a>.  
+        2014, Paris, France</a> and <a href = "http://www.w3.org/community/trustperms/">
+        Trust & Permissions Community Group</a>.  
         </br></br>
         The CSP directive <a href="https://dvcs.w3.org/hg/content-security-policy/raw-file/tip/csp-1.0-specification.html#connect-src">connect-src</a> 
         is used to restrict the allowed connection targets for XHR, Web Sockets 
@@ -347,14 +350,119 @@ Style guide to contributors:
           The object that exposes permissions for access to the TCPServerSocket interface.
         </dd>        
       </dl>
-    </section>      
+    </section>    
+    
+<!------------------------ Interface UDPPermission  ------------------------------>  
+    <section>
+       <h2><a>UDPPermission</a> Interface</h2>
+       <p>
+         This interface exposes methods related to the permission to access
+         the <a>UDPSocket</a> interface. Permission could be given based on user
+         consent, based on trust for the <a>webapp</a>, e.g. related to the 
+         origin of it and verified through web security mechanisms such as 
+         secure transport and signatures, based on previously granted or 
+         denied permission explicitly for this webapp or a combination of 
+         these mechanisms.
+       </p> 
+         
+       <dl title="interface UDPPermission" class="idl">
+         
+         <dt>
+           Promise&lt;TCPUDPPermissionState&gt; hasPermission ()
+         </dt>
+         <dd>
+           Retrieves the permission state (<a>TCPUDPPermissionState</a>) of the 
+           requesting <a>webapp</a> for creating a <a>UDPSocket</a> object. The 
+           method returns a <a>Promise</a>, which is resolved with the permission
+           state as argument.
+           <p>
+             This method MUST run the following steps asynchronously:
+             <ol>
+               <li>Create a new <a>Promise</a>, <code>udpPermissionPromise</code>,
+                   return it and run the remaining steps asynchronously.</li>                   
+               <li>Retrieve the permission state of the requesting <a>webapp</a>
+                   for creating a <a>UDPSocket</a> object according to the 
+                   <code>udpPermissionOptions</code> argument.</li>
+               <li>If there is an error, reject <code>udpPermissionPromise</code>
+                   with no arguments and abort the remaining steps.</li>
+               <li>When the request has been completed, resolve <code>udpPermissionPromise</code>
+                   with <a>TCPUDPPermissionState</a> providing the permission
+                   state. </li>   
+             </ol>      
+           </p>             
+           
+           <dl class='parameters'>
+               
+             <dt>optional UDPPermissionOptions udpPermissionOptions</dt>
+             <dd>
+               Options for the permission state request. If this argument is
+               omitted this is interpreted as described for <a>UDPPermissionOptions</a>
+               when all dictionary fields are ommitted. 
+             </dd>              
+                             
+           </dl>      
+           
+         </dd>    
+
+         <dt>
+           Promise&lt;void&gt; requestPermission ()
+         </dt>
+         <dd>
+           Requests permission to create a <a>UDPSocket</a> object. The method
+           returns a <a>Promise</a>, which is resolved if permission was given
+           and rejected if permission was denied. 
+           <p>
+             This method MUST run the following steps asynchronously:
+             <ol>
+               <li>Create a new <a>Promise</a>, <code>udpRequestPermissionPromise</code>,
+                   return it and run the remaining steps asynchronously.</li>                   
+               <li>If the requesting <a>webapp</a> is denied to create a 
+                   <a>UDPSocket</a> object that sends UDP packets to the requested 
+                   remote address and port reject <code>tcpRequestPermissionPromise</code>
+                   with DOMException <code>"SecurityError"</code> and
+                   abort the remaining steps.</li>
+               <li>If the requesting <a>webapp</a> is denied to create a 
+                   <a>UDPSocket</a> object that binds to the requested local
+                   address and port reject <code>tcpRequestPermissionPromise</code>
+                   with DOMException <code>"SecurityError"</code> and
+                   abort the remaining steps.</li>                   
+               <li>If the requesting <a>webapp</a> is allowed to create a 
+                   <a>UDPSocket</a> object without user interaction, e.g. based
+                   on a prearranged trust relationship or the user has already 
+                   granted permission explicitly for this <a>webapp</a>, resolve 
+                   <code>udpRequestPermissionPromise</code> and abort the remaining
+                   steps.</li>
+               <li>Request user consent to create a <a>UDPSocket</a> object.</li>
+               <li>If permission was granted, resolve <code>udpRequestPermissionPromise</code> 
+                   and abort the remaining steps.</li> 
+               <li>If permission was not granted, reject <code>udpRequestPermissionPromise</code>
+                   with DOMException <code>"SecurityError"</code>. </li>  
+             </ol>      
+           </p>             
+           
+           <dl class='parameters'>
+           
+             <dt>optional UDPPermissionOptions udpPermissionOptions</dt>
+             <dd>
+               Options for the permission request. If this argument is omitted 
+               this is interpreted as described for <a>UDPPermissionOptions</a>
+               when all dictionary fields are ommitted. 
+             </dd>                 
+                             
+           </dl>      
+           
+         </dd>    
+
+       </dl>                 
+      
+    </section>              
     
 <!------------------------ Interface TCPPermission  ------------------------------>  
     <section>
        <h2><a>TCPPermission</a> Interface</h2>
        <p>
          This interface exposes methods related to the permission to access
-         the TCPSocket interface. Permission could be given based on user
+         the <a>TCPSocket</a> interface. Permission could be given based on user
          consent, based on trust for the <a>webapp</a>, e.g. related to the 
          origin of it and verified through web security mechanisms such as 
          secure transport and signatures, based on previously granted or 
@@ -390,15 +498,12 @@ Style guide to contributors:
            
            <dl class='parameters'>
                
-             <dt>DOMString remoteAddress</dt>
+            <dt>optional TCPPermissionOptions tcpPermissionOptions</dt>
              <dd>
-               The host name or IPv4/6 address of the peer.
-             </dd> 
-             
-             <dt>unsigned short remotePort</dt>
-             <dd>
-               The port of the peer.
-             </dd>                
+               Options for the permission state request. If this argument is
+               omitted this is interpreted as described for <a>TCPPermissionOptions</a>
+               when all dictionary fields are ommitted. 
+             </dd>                 
                              
            </dl>      
            
@@ -440,15 +545,12 @@ Style guide to contributors:
            
            <dl class='parameters'>
                
-             <dt>DOMString remoteAddress</dt>
+             <dt>optional TCPPermissionOptions tcpPermissionOptions</dt>
              <dd>
-               The host name or IPv4/6 address of the peer.
-             </dd> 
-             
-             <dt>unsigned short remotePort</dt>
-             <dd>
-               The port of the peer.
-             </dd>                
+               Options for the permission request. If this argument is omitted 
+               this is interpreted as described for <a>TCPPermissionOptions</a>
+               when all dictionary fields are ommitted. 
+             </dd>                  
                              
            </dl>      
            
@@ -456,7 +558,108 @@ Style guide to contributors:
 
        </dl>                 
       
-    </section>          
+    </section>       
+    
+<!------------------------ Interface TCPServerPermission  ------------------------------>  
+    <section>
+       <h2><a>TCPServerPermission</a> Interface</h2>
+       <p>
+         This interface exposes methods related to the permission to access
+         the <a>TCPServerSocket</a> interface. Permission could be given based 
+         on user consent, based on trust for the <a>webapp</a>, e.g. related to 
+         the origin of it and verified through web security mechanisms such as 
+         secure transport and signatures, based on previously granted or 
+         denied permission explicitly for this webapp or a combination of 
+         these mechanisms.
+       </p> 
+         
+       <dl title="interface TCPServerPermission" class="idl">
+         
+         <dt>
+           Promise&lt;TCPUDPPermissionState&gt; hasPermission ()
+         </dt>
+         <dd>
+           Retrieves the permission state (<a>TCPUDPPermissionState</a>) of the 
+           requesting <a>webapp</a> for creating a <a>TCPServerSocket</a> object. 
+           The method returns a <a>Promise</a>, which is resolved with the
+           permission state as argument.
+           <p>
+             This method MUST run the following steps asynchronously:
+             <ol>
+               <li>Create a new <a>Promise</a>, <code>tcpServerPermissionPromise</code>,
+                   return it and run the remaining steps asynchronously.</li>                   
+               <li>Retrieve the permission state of the requesting <a>webapp</a>
+                   for creating a <a>TCPServerSocket</a> object according to the 
+                   <code>tcpServerPermissionOptions</code> argument.</li>
+               <li>If there is an error, reject <code>tcpServerPermissionPromise</code>
+                   with no arguments and abort the remaining steps.</li>
+               <li>When the request has been completed, resolve <code>tcpServerPermissionPromise</code>
+                   with <a>TCPUDPPermissionState</a> providing the permission
+                   state. </li>   
+             </ol>      
+           </p>             
+           
+           <dl class='parameters'>
+               
+             <dt>optional TCPServerPermissionOptions tcpServerPermissionOptions</dt>
+             <dd>
+               Options for the permission state request. If this argument is
+               omitted this is interpreted as described for
+               <a>TCPServerPermissionOptions</a> when all dictionary fields are 
+               omitted. 
+             </dd>              
+                             
+           </dl>      
+           
+         </dd>    
+
+         <dt>
+           Promise&lt;void&gt; requestPermission ()
+         </dt>
+         <dd>
+           Requests permission to create a <a>TCPServerSocket</a> object. The method
+           returns a <a>Promise</a>, which is resolved if permission was given
+           and rejected if permission was denied. 
+           <p>
+             This method MUST run the following steps asynchronously:
+             <ol>
+               <li>Create a new <a>Promise</a>, <code>tcpServerRequestPermissionPromise</code>,
+                   return it and run the remaining steps asynchronously.</li>                   
+               <li>If the requesting <a>webapp</a> is denied to create a 
+                   <a>TCPServerSocket</a> object that binds to the requested local
+                   address and port reject <code>tcpServerRequestPermissionPromise</code>
+                   with DOMException <code>"SecurityError"</code> and
+                   abort the remaining steps.</li>                   
+               <li>If the requesting <a>webapp</a> is allowed to create a 
+                   <a>TCPServerSocket</a> object without user interaction, e.g. based
+                   on a prearranged trust relationship or the user has already 
+                   granted permission explicitly for this <a>webapp</a>, resolve 
+                   <code>tcpServerRequestPermissionPromise</code> and abort the 
+                   remaining steps.</li>
+               <li>Request user consent to create a <a>TCPServerSocket</a> object.</li>
+               <li>If permission was granted, resolve <code>tcpServerRequestPermissionPromise</code> 
+                   and abort the remaining steps.</li> 
+               <li>If permission was not granted, reject <code>tcpServerRequestPermissionPromise</code>
+                   with DOMException <code>"SecurityError"</code>. </li>  
+             </ol>      
+           </p>             
+           
+           <dl class='parameters'>
+           
+             <dt>optional TCPServerPermissionOptions tcpServerPermissionOptions</dt>
+             <dd>
+               Options for the permission request. If this argument is omitted 
+               this is interpreted as described for <a>TCPServerPermissionOptions</a>
+               when all dictionary fields are ommitted. 
+             </dd>                 
+                             
+           </dl>      
+           
+         </dd>    
+
+       </dl>                 
+      
+    </section>                     
     
 <!------------------------ Interface UDPSocket ------------------------------>        
     <section>
@@ -475,73 +678,85 @@ Style guide to contributors:
             serviceType = 'upnp:rootdevice',
             rn = '\r\n',
             search = '';
-        
-        //  Create a new UDP client socket
-        var mySocket = new UDPSocket();
-        
-        // Build an SSDP M-SEARCH multicast message
-        search += 'M-SEARCH * HTTP/1.1' + rn;
-        search += 'ST: ' + serviceType + rn;
-        search += 'MAN: "ssdp:discover"' + rn;
-        search += 'HOST: ' + address + ':' + port + rn;
-        search += 'MX: 10';
-        
-        
-        // Receive and log SSDP M-SEARCH response messages
-        function receiveMSearchResponses() {         
-        
-          // While data in buffer, read and log UDP message
-          while (mySocket.readable.state === "readable") {            
-            var msg = mySocket.readable.read();
-            console.log ('Remote address: ' + msg.remoteAddress + 
-                         ' Remote port: ' + msg.remotePort + 
-                         'Message: ' + ab2str(msg.data)); 
-              // ArrayBuffer to string conversion could also be done by piping 
-              // through a transform stream. To be updated when the Streams API
-              // specification has been stabilized on this point. 
-          }  
-              
-          // Wait for SSDP M-SEARCH responses to arrive     
-          mySocket.readable.wait().then(
-            receiveMSearchResponses,          
-            e => console.error("Receiving error: ", e);
-          );     
-        }
-        
-        // Join SSDP multicast group
-        mySocket.joinMulticast(address);
-        
-        // Send SSDP M-SEARCH multicast message
-        mySocket.writeable.write(
-          {data : str2ab(search),
-           remoteAddress : address,
-           remotePort : port
-          }).then(
-            () => {
-              // Data sent sucessfully, wait for response
-              console.log('M-SEARCH Sent');
-              receiveMSearchResponses();
-            },
-            e => console.error("Sending error: ", e);
-        );
-        
-        // Log result of UDP socket setup. 
-        mySocket.opened.then(
+            
+        //  Request permission to send multicast messages to the address and
+        //  port reserved for SSDP                       
+        navigator.udpPermission.requestPermission({remoteAddress:"239.255.255.250", 
+                                                   remotePort:1900}).then(
           () => {
-            console.log("UDP socket created sucessfully");
+            // Permission was granted     
+          
+            //  Create a new UDP client socket
+            var mySocket = new UDPSocket();
+            
+            // Build an SSDP M-SEARCH multicast message
+            search += 'M-SEARCH * HTTP/1.1' + rn;
+            search += 'ST: ' + serviceType + rn;
+            search += 'MAN: "ssdp:discover"' + rn;
+            search += 'HOST: ' + address + ':' + port + rn;
+            search += 'MX: 10';
+            
+            
+            // Receive and log SSDP M-SEARCH response messages
+            function receiveMSearchResponses() {         
+            
+              // While data in buffer, read and log UDP message
+              while (mySocket.readable.state === "readable") {            
+                var msg = mySocket.readable.read();
+                console.log ('Remote address: ' + msg.remoteAddress + 
+                             ' Remote port: ' + msg.remotePort + 
+                             'Message: ' + ab2str(msg.data)); 
+                  // ArrayBuffer to string conversion could also be done by piping 
+                  // through a transform stream. To be updated when the Streams API
+                  // specification has been stabilized on this point. 
+              }  
+                  
+              // Wait for SSDP M-SEARCH responses to arrive     
+              mySocket.readable.wait().then(
+                receiveMSearchResponses,          
+                e => console.error("Receiving error: ", e);
+              );     
+            }
+            
+            // Join SSDP multicast group
+            mySocket.joinMulticast(address);
+            
+            // Send SSDP M-SEARCH multicast message
+            mySocket.writeable.write(
+              {data : str2ab(search),
+               remoteAddress : address,
+               remotePort : port
+              }).then(
+                () => {
+                  // Data sent sucessfully, wait for response
+                  console.log('M-SEARCH Sent');
+                  receiveMSearchResponses();
+                },
+                e => console.error("Sending error: ", e);
+            );
+            
+            // Log result of UDP socket setup. 
+            mySocket.opened.then(
+              () => {
+                console.log("UDP socket created sucessfully");
+              },
+              e =>console.error("UDP socket setup failed due to error: ", e);
+            );
+            
+            // Handle UDP socket closed, either as a result of the application 
+            // calling mySocket.close() or an error causing the socket to be 
+            // closed.
+            mySocket.closed.then(
+              () => {
+                 console.log("Socket has been cleanly closed");
+              },
+              e => console.error("Socket closed due to error: ", e);
+            );     
+          
           },
-          e =>console.error("UDP socket setup failed due to error: ", e);
-        );
-        
-        // Handle UDP socket closed, either as a result of the application 
-        // calling mySocket.close() or an error causing the socket to be 
-        // closed.
-        mySocket.closed.then(
-          () => {
-             console.log("Socket has been cleanly closed");
-          },
-          e => console.error("Socket closed due to error: ", e);
-        );          
+          e => console.error("Sending SSDP multicast messages was denied due
+                              to error: ", e);    
+        );              
 
       </pre>         
          
@@ -660,6 +875,10 @@ Style guide to contributors:
          MUST run the following steps:        
         <ol>
          <li>Create a new UDPSocket object ("<code>mySocket</code>").
+         <li>If the <a>webapp</a> does not have permission to create a 
+             <a>UDPSocket</a> object according to the <code>options</code>
+             argument then throw DOMException <code>"SecurityError"</code> and
+             abort the remaining steps.                          
          <li>If the <code>options</code> argument's <code>remoteAddress</code> 
              member is present and it is a valid host name or IPv4/6 address 
              then set the <code>mySocket.remoteAddress</code> attribute 
@@ -957,7 +1176,12 @@ Style guide to contributors:
                          <code>remotePort</code> member and the 
                          <a>UDPMessage</a> object's <code>remotePort</code> 
                          member is not present or null then throw DOMException 
-                         <code>InvalidAccessError</code> and abort these steps.                      
+                         <code>InvalidAccessError</code> and abort these steps.  
+                     <li>If the <a>UDPMesssage</a> object's <code>remoteAddress</code> 
+                         and/or <code>remotePort</code> member(s) are present but
+                         the <a>webapp</a> does not have permission to send UDP
+                         packets to this address and port then throw DOMException 
+                         <code>SecurityError</code> and abort these steps.                      
                      <li>Send UDP data with data passed in the <code>data</code> 
                          member of the <a>UDPMessage</a> object. The destination 
                          address is the address defined by the 
@@ -1029,7 +1253,7 @@ Style guide to contributors:
        //  Request permission to connect to server at address 127.0.0.1 on port
        //  6789
                       
-       navigator.tcpPermission.requestPermission("127.0.0.1", 6789).then(
+       navigator.tcpPermission.requestPermission({remoteAddress:"127.0.0.1", remotePort:6789}).then(
          () => {
            // Permission was granted       
            // Create a new TCP client socket and connect to remote host     
@@ -1163,11 +1387,11 @@ Style guide to contributors:
       <p>When the <a>TCPSocket</a> constructor is invoked, the <a>user agent</a> MUST 
          run the following steps:        
         <ol>
+         <li>Create a new TCPSocket object ("<code>mySocket</code>").
          <li>If the <a>webapp</a> does not have permission to create a TCPSocket 
              object that connects to the <code>remoteAddress</code>/<code>remotePort</code>
              as stated by the input arguments, then throw DOMException 
              <code>"SecurityError"</code> and abort the remaining steps.
-         <li>Create a new TCPSocket object ("<code>mySocket</code>").
          <li>If the <code>remoteAddress</code> argument is not a valid host name
              or IPv4/6 address and/or the <code>remotePort</code> argument is 
              not a valid port number then throw DOMException <code>"InvalidAccessError"</code> 
@@ -1501,77 +1725,88 @@ Style guide to contributors:
       // This example shows a simple TCP echo server. 
       // The server will listen on port 6789 and respond back with whatever 
       // has been sent to the server.
-      //        
-       //  Create a new server socket that listens on port 6789
-       var myServerSocket = new TCPServerSocket({"localPort": 6789});
-
-       // Listen for connection attempts from TCP clients.
-       listenForConnections();
-       function listenForConnections() {
-         myServerSocket.listen().then(
-             connectedSocket => {
-             // A connection has been accepted
-             
-               console.log ("Connection accepted from address: " + 
-                             connectedSocket.remoteAddress + " port: " + 
-                             connectedSocket.remotePort);         
-               // Wait for data
-               waitForData ();
-               function waitForData () {  
-                 connectedSocket.readable.wait().then(
-                   () => {                   
-                       // Data in buffer, read it
-                       var receivedData = connectedSocket.readable.read();
-                       console.log ("Received: " + receivedData);
-                       
-                       // Send data back
-                       connected.writeable.write(receivedData).then(
-                         () => {                         
-                           console.log ("Sending data succeeded");                      
-                         },
-                         e => console.error("Failed to send: ", e);     
-                       },
-                       // Continue to wait for data
-                       waitForData ();
-                   },                        
-                   e => {
-                     console.error("Error in connection: ", e);
-                     // Continue to wait for data
-                     waitForData ();
-                   }  
-                 );
-               
-               }
+      //    
+      
+       //  Request permission to listen on port 6789                       
+       navigator.tcpServerPermission.requestPermission({"localPort":6789}).then(
+         () => {
+           // Permission was granted     
                     
-               // Continue to listen for new connections
-               listenForConnections();    
+           //  Create a new server socket that listens on port 6789
+           var myServerSocket = new TCPServerSocket({"localPort": 6789});
+
+           // Listen for connection attempts from TCP clients.
+           listenForConnections();
+           function listenForConnections() {
+             myServerSocket.listen().then(
+                 connectedSocket => {
+                 // A connection has been accepted
+                 
+                   console.log ("Connection accepted from address: " + 
+                                 connectedSocket.remoteAddress + " port: " + 
+                                 connectedSocket.remotePort);         
+                   // Wait for data
+                   waitForData ();
+                   function waitForData () {  
+                     connectedSocket.readable.wait().then(
+                       () => {                   
+                           // Data in buffer, read it
+                           var receivedData = connectedSocket.readable.read();
+                           console.log ("Received: " + receivedData);
+                           
+                           // Send data back
+                           connected.writeable.write(receivedData).then(
+                             () => {                         
+                               console.log ("Sending data succeeded");                      
+                             },
+                             e => console.error("Failed to send: ", e);     
+                           },
+                           // Continue to wait for data
+                           waitForData ();
+                       },                        
+                       e => {
+                         console.error("Error in connection: ", e);
+                         // Continue to wait for data
+                         waitForData ();
+                       }  
+                     );
+                   
+                   }
+                        
+                   // Continue to listen for new connections
+                   listenForConnections();    
              },
-             e => {
-               console.error("A client connection attempt failed: ", e);
-
-               // Continue to listen for new connections
-               listenForConnections();                  
-             }  
-  
-         );
-       }
-
-       // Log result of TCP server socket creation attempt. 
-       myServerSocket.opened.then(
-         () => {
-           console.log("TCP server socket created sucessfully");
+                 e => {
+                   console.error("A client connection attempt failed: ", e);
+    
+                   // Continue to listen for new connections
+                   listenForConnections();                  
+                 }  
+      
+             );
+           }
+    
+           // Log result of TCP server socket creation attempt. 
+           myServerSocket.opened.then(
+             () => {
+               console.log("TCP server socket created sucessfully");
+             },
+             e =>console.error("TCP server socket creation failed due to error: ", e);
+           );
+           
+           // Handle TCP server closed, either as a result of the webapp
+           // calling myServerSocket.close() or due to an error.
+           myServerSocket.closed.then(
+             () => {
+                console.log("TCP server socket has been cleanly closed");
+             },
+             e => console.error("TCP server socket closed due to error: ", e);
+           );
+           
          },
-         e =>console.error("TCP server socket creation failed due to error: ", e);
-       );
-       
-       // Handle TCP server closed, either as a result of the webapp
-       // calling myServerSocket.close() or due to an error.
-       myServerSocket.closed.then(
-         () => {
-            console.log("TCP server socket has been cleanly closed");
-         },
-         e => console.error("TCP server socket closed due to error: ", e);
-       );
+         e => console.error("TCP Server Socket on local port 6789 was denied 
+                            due to error: ", e);    
+       );            
 
       </pre>        
       
@@ -1644,6 +1879,10 @@ Style guide to contributors:
          MUST run the following steps:        
         <ol>
          <li>Create a new <a>TCPServerSocket</a> object ("<code>myServerSocket</code>").
+         <li>If the <a>webapp</a> does not have permission to create a 
+             <a>TCPServerSocket</a> object according to the <code>options</code>
+             argument then throw DOMException <code>"SecurityError"</code> and
+             abort the remaining steps.           
          <li>If the <code>options</code> argument's <code>localAddress</code> 
              member is absent the server will accept connections directed to 
              any IPv4 address and the <code>localAddress</code> attribute is
@@ -1914,7 +2153,107 @@ Style guide to contributors:
         Use of secure transport needs more investigation                 
       </p>                
 
+    </section>     
+    
+<!------------------------ Dictionary UDPPermissionOptions ------------------------------>   
+    <section>
+      <h2>Dictionary <a>UDPPermissionOptions</a></h2>
+      <p>
+        States the options for the <a>webapp</a> to get status of permission 
+        for creating a <a>UDPSocket</a> object or to request permission to 
+        create a <a>UDPSocket</a> object. An instance of this dictionary can 
+        optionally be used as argument to the <a>UDPPermission</a> <code>hasPermission</code>
+        and <code>requestPermission</code> methods. All fields are optional. 
+      </p>      
+      <dl title="dictionary UDPPermissionOptions"
+          class="idl">          
+          
+        <dt>DOMString localAddress</dt>
+        <dd>The local interface that the <a>webapp</a> requests permission for the 
+            <a>UDPSocket</a> object to be bound to. If the field is omitted the 
+            <a>webapp</a> does not request permission to use any specific local 
+            interface, i.e. the <a>user agent</a> selects local interface.</dd>   
+        
+        <dt>unsigned short localPort</dt>
+        <dd>The local port that the <a>webapp</a> requests permission for the
+            <a>UDPSocket</a> object to be bound to. If the field is omitted the
+            <a>webapp</a> does not request permission to use any specific local
+            port, i.e. the <a>user agent</a> selects local port.</dd>             
+
+        <dt>DOMString remoteAddress</dt>
+        <dd> The host name or IPv4/6 address the <a>webapp</a> requests permission 
+             for the <a>UDPSocket</a> object to send UDP packets to. If the field
+             is omitted it means that the <a>webapp</a> requests permission 
+             for the <a>UDPSocket</a> object to send UDP packets to any peer. </dd>   
+        
+        <dt>unsigned short remotePort</dt>
+        <dd>The port of the peer the <a>webapp</a> requests permission for
+            the <a>UDPSocket</a> object to send UDP packets to. If the field
+            is omitted it means that the <a>webapp</a> requests permission for
+            the <a>UDPSocket</a> object to send UDP packets to any port. </dd>   
+   
+      </dl>   
+                  
     </section>    
+    
+<!------------------------ Dictionary TCPPermissionOptions ------------------------------>   
+    <section>
+      <h2>Dictionary <a>TCPPermissionOptions</a></h2>
+      <p>
+        States the options for the <a>webapp</a> to get status of permission 
+        for creating a <a>TCPSocket</a> object or to request permission to 
+        create a <a>TCPSocket</a> object. An instance of this dictionary can 
+        optionally be used as argument to the <a>TCPPermission</a> <code>hasPermission</code>
+        and <code>requestPermission</code> methods. All fields are optional. 
+      </p>      
+      <dl title="dictionary TCPPermissionOptions"
+          class="idl">                   
+
+        <dt>DOMString remoteAddress</dt>
+        <dd> The host name or IPv4/6 address the <a>webapp</a> requests permission 
+             for the <a>TCPSocket</a> object to connect to. If the field
+             is omitted it means that the <a>webapp</a> requests permission 
+             for the <a>TCPSocket</a> object to connect to any peer. </dd>   
+        
+        <dt>unsigned short remotePort</dt>
+        <dd>The port of the peer the <a>webapp</a> requests permission for
+            the <a>TCPSocket</a> object to connect to. If the field
+            is omitted it means that the <a>webapp</a> requests permission for
+            the <a>TCPSocket</a> object to connect to any port. </dd>   
+   
+      </dl>   
+                  
+    </section>     
+    
+<!------------------------ Dictionary TCPServerPermissionOptions ------------------------------>   
+    <section>
+      <h2>Dictionary <a>TCPServerPermissionOptions</a></h2>
+      <p>
+        States the options for the <a>webapp</a> to get status of permission 
+        for creating a <a>TCPServerSocket</a> object or to request permission to 
+        create a <a>TCPServerSocket</a> object. An instance of this dictionary can 
+        optionally be used as argument to the <a>TCPServerPermission</a> 
+        <code>hasPermission</code> and <code>requestPermission</code> methods.
+        All fields are optional. 
+      </p>      
+      <dl title="dictionary TCPServerPermissionOptions"
+          class="idl">          
+          
+        <dt>DOMString localAddress</dt>
+        <dd>The local interface that the <a>webapp</a> requests permission for the 
+            <a>TCPServerSocket</a> object to be bound to. If the field is omitted
+            the <a>webapp</a> does not request permission to use any specific local 
+            interface, i.e. the <a>user agent</a> selects local interface.</dd>   
+        
+        <dt>unsigned short localPort</dt>
+        <dd>The local port that the <a>webapp</a> requests permission for the
+            <a>TCPServerSocket</a> object to be bound to. If the field is omitted
+            the <a>webapp</a> does not request permission to use any specific 
+            local port, i.e. the <a>user agent</a> selects local port.</dd>             
+   
+      </dl>   
+                  
+    </section>                    
     
 <!------------------------ Enums ------------------------------>   
     <section>
