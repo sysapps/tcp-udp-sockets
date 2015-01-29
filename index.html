@@ -712,10 +712,7 @@ Style guide to contributors:
               }  
                   
               // Wait for SSDP M-SEARCH responses to arrive     
-              mySocket.readable.wait().then(
-                receiveMSearchResponses,          
-                e => console.error("Receiving error: ", e);
-              );     
+              mySocket.readable.ready.then(receiveMSearchResponses);     
             }
             
             // Join SSDP multicast group
@@ -1129,7 +1126,7 @@ Style guide to contributors:
                    applies. Currently this means that the ReadableStream 
                    object goes to "readable" state after 1 chunk has been 
                    enqueued to the internal ReadableStream object's input
-                   buffer. A <a>webapp</a> should call .wait() to be notified 
+                   buffer. A <a>webapp</a> should call .ready() to be notified 
                    when the state changes to "readable". To be further 
                    investigated which ReadableStreamStrategy that should 
                    be applied to UDP.
@@ -1213,7 +1210,7 @@ Style guide to contributors:
                  applies. Currently this means that the WriteableStream 
                  object goes to "waiting" state after 1 chunk has been 
                  written to the internal WriteableStream object's output
-                 buffer. This means that the <a>webapp</a> should call .wait() 
+                 buffer. This means that the <a>webapp</a> should call .ready
                  to be notified of when the state changes to "writable", 
                  i.e. the queued chunk has been written to the remote peer
                  and more data chunks could be written. To be further 
@@ -1265,7 +1262,7 @@ Style guide to contributors:
                    
                    // Data sent sucessfully, wait for response
                    console.log("Data has been sent to server");
-                   mySocket.readable.wait().then(
+                   mySocket.readable.ready.then(
                        () => {
                        
                            // Data in buffer, read it
@@ -1273,9 +1270,7 @@ Style guide to contributors:
            
                            // Close the TCP connection
                            mySocket.close();
-                       },
-                        
-                       e => console.error("Receiving error: ", e);
+                       }
                    );
                },
                e => console.error("Sending error: ", e);
@@ -1606,7 +1601,7 @@ Style guide to contributors:
                    applies. Currently this means that the ReadableStream 
                    object goes to "readable" state after 1 chunk has been 
                    enqueued to the internal ReadableStream object's input
-                   buffer. A <a>webapp</a> should call .wait() to be notified 
+                   buffer. A <a>webapp</a> should call .ready to be notified 
                    when the state changes to "readable". To be further 
                    investigated which ReadableStreamStrategy that should 
                    be applied to TCP.
@@ -1681,7 +1676,7 @@ Style guide to contributors:
                      applies. Currently this means that the WriteableStream 
                      object goes to "waiting" state after 1 chunk has been 
                      written to the internal WriteableStream object's output
-                     buffer. This means that the <a>webapp</a> should call .wait() 
+                     buffer. This means that the <a>webapp</a> should call .ready 
                      to be notified of when the state changes to "writable", 
                      i.e. the queued chunk has been written to the remote peer
                      and more data chunks could be written. To be further 
@@ -1748,7 +1743,7 @@ Style guide to contributors:
                    // Wait for data
                    waitForData ();
                    function waitForData () {  
-                     connectedSocket.readable.wait().then(
+                     connectedSocket.readable.ready.then(
                        () => {                   
                            // Data in buffer, read it
                            var receivedData = connectedSocket.readable.read();
@@ -1763,12 +1758,7 @@ Style guide to contributors:
                            },
                            // Continue to wait for data
                            waitForData ();
-                       },                        
-                       e => {
-                         console.error("Error in connection: ", e);
-                         // Continue to wait for data
-                         waitForData ();
-                       }  
+                       } 
                      );
                    
                    }
