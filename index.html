@@ -2099,13 +2099,55 @@ Style guide to contributors:
         <dt>boolean useSecureTransport</dt>
         <dd><code>true</code> if socket uses SSL or TLS. Default is 
             <code>false</code>.</dd>
+            
+        <dt>TCPKeepAliveOptions tcpKeepAliveOptions</dt>
+        <dd>States the "keepalive" options for the TCPSocket. If this field 
+            is omitted keepalive probes will not be sent.</dd>            
         
       </dl>       
               
       <p class="issue">
         Use of secure transport needs more investigation                 
       </p>                     
-    </section>        
+    </section>    
+    
+<!------------------------ Dictionary TCPKeepAliveOptions ------------------------------>   
+    <section>
+      <h2>Dictionary <a>TCPKeepAliveOptions</a></h2>
+      <p>
+        States the "keepalive" options for the TCPSocket. An instance of this
+        dictionary can optionally be used in the options argument of the 
+        constructor of the <a>TCPSocket</a> object. The TCP "keepalive" option
+        causes a packet (called a 'keepalive probe') to be sent to the remote 
+        system if a long time passes with no data or acknowledgement packets 
+        received. This packet is designed to provoke an ACK response from the 
+        peer. This enables detection of a peer which has become unreachable 
+        (e.g. powered off or disconnected from the net). <br/>
+        All fields are optional.   
+      </p>      
+      <dl title="dictionary TCPKeepAliveOptions"
+          class="idl">     
+        
+        <dt>boolean keepAliveEnabled</dt>
+        <dd><code>true</code> if the "keepalive" option is enabled. Default
+            is <code>false</code>. </dd>  
+        
+        <dt>unsigned long tcpKeepAliveTime</dt>
+        <dd>The time (in seconds) the connection needs to remain idle before
+            TCP starts sending keepalive probes. Default is 7200 seconds 
+            (2 hours).</dd>    
+            
+        <dt>unsigned long tcpKeepAliveProbes</dt>
+        <dd>The maximum number of keepalive probes TCP should send before
+            dropping the connection. Default is 8.</dd>        
+            
+        <dt>unsigned long tcpKeepAliveIntvl</dt>
+        <dd>The time (in seconds) between individual keepalive probes. Default
+            is 75 seconds.</dd>                
+        
+      </dl>       
+                                  
+    </section>               
     
 <!------------------------ Dictionary TCPServerOptions ------------------------------>   
     <section>
