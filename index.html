@@ -2101,53 +2101,25 @@ Style guide to contributors:
             <code>false</code>.</dd>
             
         <dt>TCPKeepAliveOptions tcpKeepAliveOptions</dt>
-        <dd>States the "keepalive" options for the TCPSocket. If this field 
-            is omitted keepalive probes will not be sent.</dd>            
+        <dd>States the "keepalive" options for the TCPSocket. TCP "keepalive" 
+            causes a packet (called a 'keepalive probe') to be sent to the remote 
+            system if a long time passes with no data or acknowledgement packets 
+            received. This packet is designed to provoke an ACK response from the 
+            peer. This enables detection of a peer which has become unreachable 
+            (e.g. powered off or disconnected from the net). If this field 
+            is omitted keepalive probes will not be sent.</dd>   
+            
+        <dt>unsigned long tcpKeepAliveSparseIntvl</dt>
+        <dd>The time (in seconds) between individual keepalive probes. Default
+            is 600 seconds (10 minutes).</dd>              
+                     
         
       </dl>       
               
       <p class="issue">
         Use of secure transport needs more investigation                 
       </p>                     
-    </section>    
-    
-<!------------------------ Dictionary TCPKeepAliveOptions ------------------------------>   
-    <section>
-      <h2>Dictionary <a>TCPKeepAliveOptions</a></h2>
-      <p>
-        States the "keepalive" options for the TCPSocket. An instance of this
-        dictionary can optionally be used in the options argument of the 
-        constructor of the <a>TCPSocket</a> object. The TCP "keepalive" option
-        causes a packet (called a 'keepalive probe') to be sent to the remote 
-        system if a long time passes with no data or acknowledgement packets 
-        received. This packet is designed to provoke an ACK response from the 
-        peer. This enables detection of a peer which has become unreachable 
-        (e.g. powered off or disconnected from the net). <br/>
-        All fields are optional.   
-      </p>      
-      <dl title="dictionary TCPKeepAliveOptions"
-          class="idl">     
-        
-        <dt>boolean keepAliveEnabled</dt>
-        <dd><code>true</code> if the "keepalive" option is enabled. Default
-            is <code>false</code>. </dd>  
-        
-        <dt>unsigned long tcpKeepAliveTime</dt>
-        <dd>The time (in seconds) the connection needs to remain idle before
-            TCP starts sending keepalive probes. Default is 7200 seconds 
-            (2 hours).</dd>    
-            
-        <dt>unsigned long tcpKeepAliveProbes</dt>
-        <dd>The maximum number of keepalive probes TCP should send before
-            dropping the connection. Default is 8.</dd>        
-            
-        <dt>unsigned long tcpKeepAliveIntvl</dt>
-        <dd>The time (in seconds) between individual keepalive probes. Default
-            is 75 seconds.</dd>                
-        
-      </dl>       
-                                  
-    </section>               
+    </section>         
     
 <!------------------------ Dictionary TCPServerOptions ------------------------------>   
     <section>
@@ -2330,7 +2302,22 @@ Style guide to contributors:
               by the <a>webapp</a>, which means that it is not possible to send data 
               but it is still possible to receive.</dd>                      
         </dl>          
-      </section>        
+      </section>       
+
+      <section>
+        
+        <h3>TCPKeepAliveOptions</h3>
+      
+        <dl id='enum-basic' class='idl' title='enum TCPKeepAliveOptions'>
+          <dt>off</dt>
+          <dd>Don't use TCP keep-alives. This is the defult.</dd>
+          <dt>frequent-then-sparse</dt>
+          <dd>Keep-alive probes every 10s for first minute, then send with 
+              "tcpKeepAliveSparseIntvl" after that.</dd>
+          <dt>sparse</dt>
+          <dd>Keep-alive probe sent with "tcpKeepAliveSparseIntvl".</dd>                  
+        </dl>          
+      </section>           
                   
     </section>    
            
