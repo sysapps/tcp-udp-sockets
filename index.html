@@ -1,150 +1,388 @@
-<!DOCTYPE html>
-<html>
-  <head>
+<!DOCTYPE html><html lang="en" dir="ltr"><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8"><meta name="generator" content="ReSpec 24.33.3"><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>TCP and UDP Socket API</title>
-    <meta http-equiv='Content-Type' content='text/html;charset=utf-8'/>
-    <!--
-      === NOTA BENE ===
-      For the three scripts below, if your spec resides on dev.w3 you can check them
-      out in the same tree and use relative links so that they'll work offline,
-     -->
-    <script src='https://www.w3.org/Tools/respec/respec-w3c-common' class='remove'
-            async></script>
-    <script class='remove'>
-      var respecConfig = {
-          // specification status (e.g. WD, LCWD, NOTE, etc.). If in doubt use ED.
-          specStatus:           "unofficial",
+    
+    
+    
+    
+  <style id="respec-mainstyle">/*****************************************************************
+ * ReSpec 3 CSS
+ * Robin Berjon - http://berjon.com/
+ *****************************************************************/
 
-          // the specification's short name, as in http://www.w3.org/TR/short-name/
-          shortName:            "tcp-udp-sockets",
+@keyframes pop {
+  0% {
+    transform: scale(1, 1);
+  }
+  25% {
+    transform: scale(1.25, 1.25);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
 
-          // if your specification has a subtitle that goes below the main
-          // formal title, define it here
-          // subtitle   :  "an excellent document",
+/* Override code highlighter background */
+.hljs {
+  background: transparent !important;
+}
 
-          // if you wish the publication date to be other than today, set this
-          // publishDate:  "2009-08-06",
+/* --- INLINES --- */
+h1 abbr,
+h2 abbr,
+h3 abbr,
+h4 abbr,
+h5 abbr,
+h6 abbr,
+a abbr {
+  border: none;
+}
 
-          // if the specification's copyright date is a range of years, specify
-          // the start date here:
-          // copyrightStart: "2005"
+dfn {
+  font-weight: bold;
+}
 
-          // if there is a previously published draft, uncomment this and set its
-          // YYYY-MM-DD date
-          // and its maturity status
-          // previousPublishDate:  "1977-03-15",
-          // previousMaturity:  "WD",
+a.internalDFN {
+  color: inherit;
+  border-bottom: 1px solid #99c;
+  text-decoration: none;
+}
 
-          // if there a publicly available Editor's Draft, this is the link
-          edDraftURI:           "http://www.w3.org/2012/sysapps/tcp-udp-sockets/",
+a.externalDFN {
+  color: inherit;
+  border-bottom: 1px dotted #ccc;
+  text-decoration: none;
+}
 
-          // if this is a LCWD, uncomment and set the end of its review period
-          // lcEnd: "2009-08-05",
+a.bibref {
+  text-decoration: none;
+}
 
-          // if you want to have extra CSS, append them to this list
-          // it is recommended that the respec.css stylesheet be kept
-          // extraCSS:             ["http://dev.w3.org/2009/dap/ReSpec.js/css/respec.css"],
+.respec-offending-element:target {
+  animation: pop 0.25s ease-in-out 0s 1;
+}
 
-          // editors, add as many as you like
-          // only "name" is required
-          editors:  [
-              { name: "No one" },
-          ],
+.respec-offending-element,
+a[href].respec-offending-element {
+  text-decoration: red wavy underline;
+}
+@supports not (text-decoration: red wavy underline) {
+  .respec-offending-element:not(pre) {
+    display: inline-block;
+  }
+  .respec-offending-element {
+    /* Red squiggly line */
+    background: url(data:image/gif;base64,R0lGODdhBAADAPEAANv///8AAP///wAAACwAAAAABAADAEACBZQjmIAFADs=)
+      bottom repeat-x;
+  }
+}
 
-          // authors, add as many as you like.
-          // This is optional, uncomment if you have authors as well as editors.
-          // only "name" is required. Same format as editors.
+#references :target {
+  background: #eaf3ff;
+  animation: pop 0.4s ease-in-out 0s 1;
+}
 
-          //authors:  [
-          //    { name: "Your Name", url: "http://example.org/",
-          //      company: "Your Company", companyURL: "http://example.com/" },
-          //],
+cite .bibref {
+  font-style: normal;
+}
 
-          // name of the WG
-          wg:           "System Applications Working Group",
+code {
+  color: #c83500;
+}
 
-          // URI of the public WG page
-          wgURI:        "http://www.w3.org/2012/sysapps/",
+th code {
+  color: inherit;
+}
 
-          // name (without the @w3c.org) of the public mailing to which comments are due
-          wgPublicList: "public-sysapps",
+a[href].orcid {
+    padding-left: 4px;
+    padding-right: 4px;
+}
 
-          // URI of the patent status for this WG, for Rec-track documents
-          // !!!! IMPORTANT !!!!
-          // This is important for Rec-track documents, do not copy a patent
-          // URI from a random document unless you know what you're doing. If in
-          // doubt ask your friendly neighbourhood Team Contact.
-          wgPatentURI:  "http://www.w3.org/2004/01/pp-impl/58119/status",
+a[href].orcid > svg {
+    margin-bottom: -2px;
+}
 
-          localBiblio:  {
-            // Reference to the Nagle algorithm
-            "NAGLE": {
-              title:    "Nagle algorithm",
-              href:     "http://www.rfc-editor.org/rfc/rfc896.txt",
-              authors:  [
-               "John Nagle"
-              ],
-              status:   "Request For Comments",
-              publisher:  "IETF"
-            },
+/* --- TOC --- */
 
-            // Reference to the WHATWG Streams API specification
-            "STREAMS": {
-              "title": "Streams API",
-              "href": "https://streams.spec.whatwg.org/",
-              "authors": ["Domenic Denicola"],
-              "status": "Living standard",
-              "publisher": "WHATWG"
-            },
+.toc a,
+.tof a {
+  text-decoration: none;
+}
 
-            // Reference to the W3C Streams API specification
-            "W3C-STREAMS": {
-              "title": "W3C Streams API",
-              "href": "https://dvcs.w3.org/hg/streams-api/raw-file/tip/Overview.htm",
-              "authors": ["Feras Moussa", "Takeshi Yoshino"],
-              "status": "ED",
-              "publisher": "W3C"
-            },
+a .secno,
+a .figno {
+  color: #000;
+}
 
-            // Reference to the ECMAScript, edition 6, specification
-            "ES6": {
-              "title": "ECMA-262, 6th Edition / Draft January 20, 2014",
-              "href": "http://people.mozilla.org/~jorendorff/es6-draft.html",
-              "status": "Draft",
-              "publisher": "Ecma International"
-            }
-          },
-      };
-    </script>
-  </head>
+ul.tof,
+ol.tof {
+  list-style: none outside none;
+}
 
-<!-----------------------------------------------------------------------------
-Style guide to contributors:
-============================
-- this document uses ReSpec, see
-  http://dev.w3.org/2009/dap/ReSpec.js/documentation.html
-- use 80 characters wide lines, whenever possible (except long links)
-- keep sections 2 empty lines apart
-- put comments in front of sections, for better readability with syntax coloring
-  editors
-- use indentation with care: it may improve readability, but at the expense of
-  line lenght
-- when descriptions of attributes is short, use the <dd> elements even when
-  the text also contains conformance statements (e.g. MUST, SHOULD, MAY).
-  No use repeating the same information in a separate paragraph.
------------------------------------------------------------------------------->
+.caption {
+  margin-top: 0.5em;
+  font-style: italic;
+}
 
-  <body>
+/* --- TABLE --- */
 
-<!------------------------------ Abstract ------------------------------------>
-    <section id='abstract'>
+table.simple {
+  border-spacing: 0;
+  border-collapse: collapse;
+  border-bottom: 3px solid #005a9c;
+}
+
+.simple th {
+  background: #005a9c;
+  color: #fff;
+  padding: 3px 5px;
+  text-align: left;
+}
+
+.simple th[scope="row"] {
+  background: inherit;
+  color: inherit;
+  border-top: 1px solid #ddd;
+}
+
+.simple td {
+  padding: 3px 10px;
+  border-top: 1px solid #ddd;
+}
+
+.simple tr:nth-child(even) {
+  background: #f0f6ff;
+}
+
+/* --- DL --- */
+
+.section dd > p:first-child {
+  margin-top: 0;
+}
+
+.section dd > p:last-child {
+  margin-bottom: 0;
+}
+
+.section dd {
+  margin-bottom: 1em;
+}
+
+.section dl.attrs dd,
+.section dl.eldef dd {
+  margin-bottom: 0;
+}
+
+#issue-summary > ul,
+.respec-dfn-list {
+  column-count: 2;
+}
+
+#issue-summary li,
+.respec-dfn-list li {
+  list-style: none;
+}
+
+details.respec-tests-details {
+  margin-left: 1em;
+  display: inline-block;
+  vertical-align: top;
+}
+
+details.respec-tests-details > * {
+  padding-right: 2em;
+}
+
+details.respec-tests-details[open] {
+  z-index: 999999;
+  position: absolute;
+  border: thin solid #cad3e2;
+  border-radius: 0.3em;
+  background-color: white;
+  padding-bottom: 0.5em;
+}
+
+details.respec-tests-details[open] > summary {
+  border-bottom: thin solid #cad3e2;
+  padding-left: 1em;
+  margin-bottom: 1em;
+  line-height: 2em;
+}
+
+details.respec-tests-details > ul {
+  width: 100%;
+  margin-top: -0.3em;
+}
+
+details.respec-tests-details > li {
+  padding-left: 1em;
+}
+
+a[href].self-link:hover {
+  opacity: 1;
+  text-decoration: none;
+  background-color: transparent;
+}
+
+h2,
+h3,
+h4,
+h5,
+h6 {
+  position: relative;
+}
+
+aside.example .marker > a.self-link {
+  color: inherit;
+}
+
+h2 > a.self-link,
+h3 > a.self-link,
+h4 > a.self-link,
+h5 > a.self-link,
+h6 > a.self-link {
+  border: none;
+  color: inherit;
+  font-size: 83%;
+  height: 2em;
+  left: -1.6em;
+  opacity: 0.5;
+  position: absolute;
+  text-align: center;
+  text-decoration: none;
+  top: 0;
+  transition: opacity 0.2s;
+  width: 2em;
+}
+
+h2 > a.self-link::before,
+h3 > a.self-link::before,
+h4 > a.self-link::before,
+h5 > a.self-link::before,
+h6 > a.self-link::before {
+  content: "§";
+  display: block;
+}
+
+@media (max-width: 767px) {
+  dd {
+    margin-left: 0;
+  }
+
+  /* Don't position self-link in headings off-screen */
+  h2 > a.self-link,
+  h3 > a.self-link,
+  h4 > a.self-link,
+  h5 > a.self-link,
+  h6 > a.self-link {
+    left: auto;
+    top: auto;
+  }
+}
+
+@media print {
+  .removeOnSave {
+    display: none;
+  }
+}
+</style><script id="initialUserConfig" type="application/json">{
+  "specStatus": "unofficial",
+  "shortName": "tcp-udp-sockets",
+  "edDraftURI": "http://www.w3.org/2012/sysapps/tcp-udp-sockets/",
+  "editors": [
+    {
+      "name": "No one"
+    }
+  ],
+  "wg": "System Applications Working Group",
+  "wgURI": "http://www.w3.org/2012/sysapps/",
+  "wgPublicList": "public-sysapps",
+  "wgPatentURI": "http://www.w3.org/2004/01/pp-impl/58119/status",
+  "localBiblio": {
+    "NAGLE": {
+      "title": "Nagle algorithm",
+      "href": "http://www.rfc-editor.org/rfc/rfc896.txt",
+      "authors": [
+        "John Nagle"
+      ],
+      "status": "Request For Comments",
+      "publisher": "IETF"
+    },
+    "STREAMS": {
+      "title": "Streams API",
+      "href": "https://streams.spec.whatwg.org/",
+      "authors": [
+        "Domenic Denicola"
+      ],
+      "status": "Living standard",
+      "publisher": "WHATWG"
+    },
+    "W3C-STREAMS": {
+      "title": "W3C Streams API",
+      "href": "https://dvcs.w3.org/hg/streams-api/raw-file/tip/Overview.htm",
+      "authors": [
+        "Feras Moussa",
+        "Takeshi Yoshino"
+      ],
+      "status": "ED",
+      "publisher": "W3C"
+    },
+    "ES6": {
+      "title": "ECMA-262, 6th Edition / Draft January 20, 2014",
+      "href": "http://people.mozilla.org/~jorendorff/es6-draft.html",
+      "status": "Draft",
+      "publisher": "Ecma International"
+    }
+  },
+  "publishISODate": "2019-10-02T00:00:00.000Z",
+  "generatedSubtitle": "Unofficial Draft 02 October 2019"
+}</script><meta name="description" content="This API provides interfaces to raw UDP sockets, TCP Client sockets and
+        TCP Server sockets."><link rel="stylesheet" href="https://www.w3.org/StyleSheets/TR/2016/W3C-UD"></head>
+
+
+
+  <body class="h-entry informative toc-inline"><div class="head">
+       <h1 id="title" class="title p-name">TCP and UDP Socket API</h1>
+      
+      <h2>
+        Unofficial Draft
+        <time class="dt-published" datetime="2019-10-02">02 October 2019</time>
+      </h2>
+      <dl>
+        
+        <dt>Latest editor's draft:</dt><dd><a href="http://www.w3.org/2012/sysapps/tcp-udp-sockets/">http://www.w3.org/2012/sysapps/tcp-udp-sockets/</a></dd>
+        
+        
+        
+        
+        
+        
+        <dt>Editor:</dt>
+        <dd class="p-author h-card vcard"><span class="p-name fn">No one</span></dd>
+        
+        
+        
+      </dl>
+      
+      
+      
+      <p class="copyright">
+            This document is licensed under a
+            <a rel="license" href="https://creativecommons.org/licenses/by/4.0/" class="subfoot">Creative Commons Attribution 4.0 License</a>.
+          </p>
+      <hr title="Separator for header">
+    </div>
+
+
+    <section id="abstract" class="introductory"><h2>Abstract</h2>
       <p>
         This API provides interfaces to raw UDP sockets, TCP Client sockets and
         TCP Server sockets.
       </p>
-    </section>
-    <section>
-        <h2>Status of This Document</h2>
+    </section><nav id="toc"><h2 class="introductory" id="table-of-contents">Table of Contents</h2><ol class="toc"><li class="tocline"><a class="tocxref" href="#status-of-this-document"><bdi class="secno">1. </bdi>Status of This Document</a></li></ol></nav>
+    <section id="status-of-this-document">
+        <h2 id="x1-status-of-this-document"><bdi class="secno">1. </bdi>Status of This Document</h2>
         <p>
           <strong>
             Work on this document has been discontinued.
@@ -152,4 +390,4 @@ Style guide to contributors:
           See <a href="https://github.com/sysapps/tcp-udp-sockets">github repo</a> for historical information.
         </p>
       </section>
-    </html>
+    <p role="navigation" id="back-to-top"><a href="#title"><abbr title="Back to Top">↑</abbr></a></p><script src="https://www.w3.org/scripts/TR/2016/fixup.js"></script></body></html>
